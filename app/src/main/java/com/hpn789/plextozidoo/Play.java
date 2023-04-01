@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 public class Play extends AppCompatActivity {
 
@@ -208,7 +209,7 @@ public class Play extends AppCompatActivity {
                             if(!path_to_replace.isEmpty() && path.contains(path_to_replace))
                             {
                                 String replace_with = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with", "");
-                                path = path.replace(path_to_replace, replace_with).replace("\\", "/");
+                                path = path.replaceFirst(Pattern.quote(path_to_replace), replace_with).replace("\\", "/");
 
                                 // If this is an SMB request add user name and password to the path
                                 String username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername", "");

@@ -6,6 +6,7 @@
     <string name="general_settings">General</string>
     <string name="player_settings">Player</string>
     <string name="plex_settings">Plex</string>
+    <string name="substitution_settings">Substitutions</string>
     <string name="smb_settings">Smb</string>
 
     <!-- General Preferences -->
@@ -16,6 +17,8 @@
     <string name="auto_play_title">Auto play next episode</string>
     <!-- Plex Preferences -->
     <string name="libraries_title">Plex libraries name to search-in (separated by ",")</string>
+    <!-- Substitution Preferences -->
+    <string name="substitution_description">Multiple substitutions are allowed, each separated by a \",\"\nThe same number of values must be given for both entries below</string>
     <string name="path_to_replace">Part of the path to replace</string>
     <string name="replaced_with">Replaced with</string>
     <!-- Smb Preferences -->

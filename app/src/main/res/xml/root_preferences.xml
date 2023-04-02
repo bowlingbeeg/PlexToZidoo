@@ -40,41 +40,52 @@
     <PreferenceCategory app:title="@string/plex_settings">
 
         <EditTextPreference
-            app:defaultValue=""
-            app:key="libraries"
-            app:title="@string/libraries_title"
+            android:defaultValue=""
+            android:key="libraries"
+            android:title="@string/libraries_title"
             app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/substitution_settings">
+
+        <Preference
+            android:key="substitution_description"
+            android:persistent="false"
+            android:title="@string/substitution_description"/>
 
         <EditTextPreference
             android:defaultValue=""
             android:key="path_to_replace"
+            android:title="@string/path_to_replace"
             app:useSimpleSummaryProvider="true"
-            android:singleLine="true"
-            android:title="@string/path_to_replace" />
+            android:singleLine="true" />
 
         <EditTextPreference
             android:defaultValue=""
             android:key="replaced_with"
+            android:title="@string/replaced_with"
             app:useSimpleSummaryProvider="true"
-            android:singleLine="true"
-            android:title="@string/replaced_with" />
+            android:singleLine="true" />
 
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/smb_settings">
 
         <EditTextPreference
-            app:defaultValue=""
-            app:key="smbUsername"
-            app:title="@string/smbUsername_title"
-            app:useSimpleSummaryProvider="true" />
+            android:defaultValue=""
+            android:key="smbUsername"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
 
         <EditTextPreference
-            app:defaultValue=""
-            app:key="smbPassword"
-            app:title="@string/smbPassword_title"
-            android:inputType="textPassword"
-            app:useSimpleSummaryProvider="false" />
+            android:defaultValue=""
+            android:key="smbPassword"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
 
     </PreferenceCategory>
 

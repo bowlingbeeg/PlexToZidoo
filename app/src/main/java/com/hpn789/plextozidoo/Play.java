@@ -203,27 +203,32 @@ public class Play extends AppCompatActivity {
                             videoIndex = parser.getVideoIndex();
                             parentRatingKey = parser.getParentRatingKey();
                             password = "";
+                            directPath = intent.getDataString();
 
                             // Check if we can actually do the substitution, if not then pass along the original file and see if it plays
-                            String path_to_replace = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace", "");
-                            if(!path_to_replace.isEmpty() && path.contains(path_to_replace))
+                            String[] path_to_replace = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace", "").split(",");
+                            String[] replaced_with = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with", "").split(",");
+                            if(path_to_replace.length > 0 && replaced_with.length > 0 && path_to_replace.length == replaced_with.length)
                             {
-                                String replace_with = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with", "");
-                                path = path.replaceFirst(Pattern.quote(path_to_replace), replace_with).replace("\\", "/");
-
-                                // If this is an SMB request add user name and password to the path
-                                String username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername", "");
-                                if(!username.isEmpty())
+                                for (int i = 0; i < path_to_replace.length; i++)
                                 {
-                                    password = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbPassword", "");
-                                    path = path.replace("smb://", "smb://" + username + ":" + password + "@");
-                                }
+                                    if (path.contains(path_to_replace[i]))
+                                    {
+                                        path = path.replaceFirst(Pattern.quote(path_to_replace[i]), replaced_with[i]).replace("\\", "/");
 
-                                directPath = path;
-                            }
-                            else
-                            {
-                                directPath = intent.getDataString();
+                                        // If this is an SMB request add user name and password to the path
+                                        String username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername", "");
+                                        if(!username.isEmpty())
+                                        {
+                                            password = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbPassword", "");
+                                            path = path.replace("smb://", "smb://" + username + ":" + password + "@");
+                                        }
+
+                                        directPath = path;
+
+                                        break;
+                                    }
+                                }
                             }
 
                             // Search the metadata for audio and subtitle indexes
@@ -259,16 +264,21 @@ public class Play extends AppCompatActivity {
                 response -> {
                     // Display the first 500 characters of the response string.
                     String[] names = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("libraries", "").split(",");
-                    PlexXmlParser parser = new PlexXmlParser(Arrays.asList(names));
-                    InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-                    try {
-                        List<PlexLibraryInfo> libraries = parser.parse(targetStream);
-                        searchPath(libraries, 0);
+                    if(names.length > 0 && !names[0].isEmpty())
+                    {
+                        PlexXmlParser parser = new PlexXmlParser(Arrays.asList(names));
+                        InputStream targetStream = new ByteArrayInputStream(response.getBytes());
+                        try {
+                            List<PlexLibraryInfo> libraries = parser.parse(targetStream);
+                            searchPath(libraries, 0);
+                            return;
 
-                    } catch (XmlPullParserException | IOException e) {
-                        e.printStackTrace();
+                        } catch (XmlPullParserException | IOException e) {
+                            e.printStackTrace();
+                        }
                     }
 
+                    updateDebugPage();
                 },
                 error -> Toast.makeText(getApplicationContext(), "That didn't work! (1)", Toast.LENGTH_LONG).show());
 

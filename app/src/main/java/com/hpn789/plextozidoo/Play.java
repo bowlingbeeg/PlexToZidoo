@@ -7,7 +7,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.Xml;
 import android.view.View;
 import android.widget.Button;
@@ -20,10 +19,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
@@ -52,6 +49,8 @@ public class Play extends AppCompatActivity {
     private int videoIndex = 0;
     private String parentRatingKey = "";
     private String server = "";
+    private String message = "";
+    private boolean foundSubstitution = false;
 
     private TextView textView;
     private Button playButton;
@@ -97,7 +96,7 @@ public class Play extends AppCompatActivity {
             mediaType = libraryInfo.getType().name;
         }
 
-        textView.setText(String.format(Locale.ENGLISH, "Intent: %s\n\nPath Substitution: %s\n\nView Offset: %d\n\nDuration: %d\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s", intentToPrint, pathToPrint, viewOffset, duration, ratingKey, partKey, partId, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey));
+        textView.setText(String.format(Locale.ENGLISH, "Message: %s\n\nIntent: %s\n\nPath Substitution: %s\n\nView Offset: %d\n\nDuration: %d\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s", message, intentToPrint, pathToPrint, viewOffset, duration, ratingKey, partKey, partId, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey));
     }
 
     private void showDebugPageOrSendIntent()
@@ -129,7 +128,8 @@ public class Play extends AppCompatActivity {
                     // Display the first 500 characters of the response string.
                     PlexLibraryXmlParser parser = new PlexLibraryXmlParser(null);
                     InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-                    try {
+                    try
+                    {
                         String path = parser.parse(targetStream);
                         if(!path.isEmpty())
                         {
@@ -143,11 +143,15 @@ public class Play extends AppCompatActivity {
                     }
                     catch (Exception e)
                     {
-                        e.printStackTrace();
+                        message = "10: " + e;
+                        showDebugPageOrSendIntent();
+                        return;
                     }
-
                 },
-                error -> Toast.makeText(getApplicationContext(), "That didn't work! (5)", Toast.LENGTH_LONG).show());
+                error -> {
+                    message = "11: Couldn't find next file";
+                    showDebugPageOrSendIntent();
+                });
 
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
@@ -163,7 +167,8 @@ public class Play extends AppCompatActivity {
                     // Display the first 500 characters of the response string.
                     PlexLibraryXmlParser parser = new PlexLibraryXmlParser(partKey);
                     InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-                    try {
+                    try
+                    {
                         String path = parser.parse(targetStream);
                         if(!path.isEmpty())
                         {
@@ -180,13 +185,17 @@ public class Play extends AppCompatActivity {
                             }
                         }
                     }
-                    catch (Exception e) {
-                        e.printStackTrace();
+                    catch (Exception e)
+                    {
+                        message = "8: " + e;
                     }
 
                     showDebugPageOrSendIntent();
                 },
-                error -> Toast.makeText(getApplicationContext(), "That didn't work! (3)", Toast.LENGTH_LONG).show());
+                error -> {
+                    message = "9: Couldn't find metadata";
+                    showDebugPageOrSendIntent();
+                });
 
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
@@ -203,7 +212,8 @@ public class Play extends AppCompatActivity {
                     // Display the first 500 characters of the response string.
                     PlexLibraryXmlParser parser = new PlexLibraryXmlParser(partKey);
                     InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-                    try {
+                    try
+                    {
                         String path = parser.parse(targetStream);
                         if(!path.isEmpty())
                         {
@@ -214,7 +224,6 @@ public class Play extends AppCompatActivity {
                             videoIndex = parser.getVideoIndex();
                             parentRatingKey = parser.getParentRatingKey();
                             password = "";
-                            directPath = intent.getDataString();
 
                             // Check if we can actually do the substitution, if not then pass along the original file and see if it plays
                             String[] path_to_replace = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace", "").split(",");
@@ -235,6 +244,7 @@ public class Play extends AppCompatActivity {
                                             path = path.replace("smb://", "smb://" + username + ":" + password + "@");
                                         }
 
+                                        foundSubstitution = true;
                                         directPath = path;
 
                                         break;
@@ -254,13 +264,18 @@ public class Play extends AppCompatActivity {
                             directPath = url;
                             updateDebugPage();
                         }
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
-
+                    catch (Exception e)
+                    {
+                        message = "6: " + e;
+                        showDebugPageOrSendIntent();
+                        return;
+                    }
                 },
-                error -> Toast.makeText(getApplicationContext(), "That didn't work! (2)", Toast.LENGTH_LONG).show());
+                error -> {
+                    message = "7: Couldn't find path";
+                    showDebugPageOrSendIntent();
+                });
 
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
@@ -279,19 +294,26 @@ public class Play extends AppCompatActivity {
                     {
                         PlexXmlParser parser = new PlexXmlParser(Arrays.asList(names));
                         InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-                        try {
+                        try
+                        {
                             List<PlexLibraryInfo> libraries = parser.parse(targetStream);
                             searchPath(libraries, 0);
                             return;
-
-                        } catch (XmlPullParserException | IOException e) {
-                            e.printStackTrace();
+                        }
+                        catch (Exception e)
+                        {
+                            message = "4: " + e;
+                            showDebugPageOrSendIntent();
+                            return;
                         }
                     }
 
                     updateDebugPage();
                 },
-                error -> Toast.makeText(getApplicationContext(), "That didn't work! (1)", Toast.LENGTH_LONG).show());
+                error -> {
+                    message = "5: Couldn't find library";
+                    showDebugPageOrSendIntent();
+                });
 
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
@@ -315,14 +337,19 @@ public class Play extends AppCompatActivity {
                         parser.require(XmlPullParser.START_TAG, null, "MediaContainer");
                         server = parser.getAttributeValue(null, "machineIdentifier");
                     }
-                    catch (XmlPullParserException | IOException e)
+                    catch (Exception e)
                     {
-                        e.printStackTrace();
+                        message = "2: " + e;
+                        showDebugPageOrSendIntent();
+                        return;
                     }
 
                     searchLibrary();
                 },
-                error -> Toast.makeText(getApplicationContext(), "That didn't work! (6)", Toast.LENGTH_LONG).show());
+                error -> {
+                    message = "3: Couldn't find server";
+                    showDebugPageOrSendIntent();
+                });
 
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
@@ -335,12 +362,12 @@ public class Play extends AppCompatActivity {
         intent = getIntent();
 
         String inputString = intent.getDataString();
-        Log.d("plex", "" + inputString);
         viewOffset = intent.getIntExtra("viewOffset", 0);
+        directPath = inputString;
         textView = findViewById(R.id.textView2);
         playButton = findViewById(R.id.play_button);
         playButton.setOnClickListener(v -> {
-            if (PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("useZidooPlayer", true))
+            if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("useZidooPlayer", true))
             {
                 startZidooPlayer(directPath, viewOffset);
             }
@@ -354,7 +381,9 @@ public class Play extends AppCompatActivity {
         {
             if(!inputString.contains("/library/"))
             {
-                throw new Exception("Not a library file, no need to continue");
+                message = "0: No library string in address";
+                showDebugPageOrSendIntent();
+                return;
             }
 
             int indexOfLibrary = inputString.indexOf("/library/");
@@ -370,11 +399,8 @@ public class Play extends AppCompatActivity {
         }
         catch (Exception e)
         {
-            // Doesn't appear to be local content so just pass the intent through to the video player and hope for the best
-            directPath = inputString;
-
+            message = "1: " + e;
             showDebugPageOrSendIntent();
-
             return;
         }
 
@@ -445,10 +471,11 @@ public class Play extends AppCompatActivity {
     {
         super.onActivityResult(requestCode, resultCode, data);
 
+        boolean issuePlexIntent = true;
         if(resultCode == Activity.RESULT_OK && requestCode == 98)
         {
             int position = data.getIntExtra("position", 0);
-            if(position > 0 && !address.isEmpty() && !ratingKey.isEmpty() && !token.isEmpty())
+            if(foundSubstitution && position > 0 && !address.isEmpty() && !ratingKey.isEmpty() && !token.isEmpty())
             {
                 RequestQueue queue = Volley.newRequestQueue(this);
                 String url;
@@ -480,21 +507,30 @@ public class Play extends AppCompatActivity {
 
                 StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                         response -> {
+                            Intent plex = new Intent(Intent.ACTION_VIEW);
+                            plex.setClassName("com.plexapp.android", "com.plexapp.plex.activities.SplashActivity");
                             if(!server.isEmpty())
                             {
                                 // This will try and automatically refresh the plex client with the progress/watched status we just updated on the plex server
-                                Intent plex = new Intent(Intent.ACTION_VIEW);
-                                plex.setClassName("com.plexapp.android", "com.plexapp.plex.activities.SplashActivity");
                                 plex.setData(Uri.parse("plex://server://" + server + "/com.plexapp.plugins.library/library/metadata/" + ratingKey));
-                                startActivity(plex);
                             }
+                            startActivity(plex);
                         },
-                        error -> Toast.makeText(getApplicationContext(), "That didn't work! (4)", Toast.LENGTH_LONG).show()
+                        error -> Toast.makeText(getApplicationContext(), "Couldn't update progress or watched status", Toast.LENGTH_LONG).show()
                 );
+
+                issuePlexIntent = false;
 
                 // Add the request to the RequestQueue.
                 queue.add(stringRequest);
             }
+        }
+
+        if(issuePlexIntent)
+        {
+            Intent plex = new Intent(Intent.ACTION_VIEW);
+            plex.setClassName("com.plexapp.android", "com.plexapp.plex.activities.SplashActivity");
+            startActivity(plex);
         }
     }
 

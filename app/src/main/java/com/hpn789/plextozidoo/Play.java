@@ -70,12 +70,23 @@ public class Play extends AppCompatActivity {
 
     private void updateDebugPage()
     {
+        String intentToPrint = intentToString(intent);
         String pathToPrint = directPath;
+
+        // Replace the address and token in the intent
+        intentToPrint = intentToPrint.replaceFirst(Pattern.quote(address), "<address>");
+        intentToPrint = intentToPrint.replaceFirst(Pattern.quote(token), "<token>");
+        intentToPrint = intentToPrint.replaceFirst("(X-Plex-Client-Identifier=).*?(&)", "$1<client>$2");
+
+        // Replace the address and token in the path
+        pathToPrint = pathToPrint.replaceFirst(Pattern.quote(address), "<address>");
+        pathToPrint = pathToPrint.replaceFirst(Pattern.quote(token), "<token>");
+        pathToPrint = pathToPrint.replaceFirst("(X-Plex-Client-Identifier=).*?(&)", "$1<client>$2");
 
         // If the path has a password in it then hide it from the debug output
         if(!password.isEmpty())
         {
-            pathToPrint = directPath.replaceAll(":" + password + "@", ":********@");
+            pathToPrint = pathToPrint.replaceFirst(":" + password + "@", ":********@");
         }
 
         String librarySection = "";
@@ -86,7 +97,7 @@ public class Play extends AppCompatActivity {
             mediaType = libraryInfo.getType().name;
         }
 
-        textView.setText(String.format(Locale.ENGLISH, "Intent: %s\n\nPath Substitution: %s\n\nView Offset: %d\n\nDuration: %d\n\nAddress: %s\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nToken: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s\n\nServer: %s", intentToString(intent), pathToPrint, viewOffset, duration, address, ratingKey, partKey, partId, token, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey, server));
+        textView.setText(String.format(Locale.ENGLISH, "Intent: %s\n\nPath Substitution: %s\n\nView Offset: %d\n\nDuration: %d\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s", intentToPrint, pathToPrint, viewOffset, duration, ratingKey, partKey, partId, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey));
     }
 
     private void showDebugPageOrSendIntent()
@@ -212,7 +223,7 @@ public class Play extends AppCompatActivity {
                             {
                                 for (int i = 0; i < path_to_replace.length; i++)
                                 {
-                                    if (path.contains(path_to_replace[i]))
+                                    if (!path_to_replace[i].isEmpty() && path.contains(path_to_replace[i]))
                                     {
                                         path = path.replaceFirst(Pattern.quote(path_to_replace[i]), replaced_with[i]).replace("\\", "/");
 

@@ -5,7 +5,7 @@
         android:key="version"
         android:persistent="false"
         android:title="@string/version_settings"
-        android:summary="@string/versionName"/>
+        android:summary="@string/versionName" />
 
     <PreferenceCategory app:title="@string/general_settings">
 
@@ -52,7 +52,8 @@
         <Preference
             android:key="substitution_description"
             android:persistent="false"
-            android:title="@string/substitution_description"/>
+            android:title="@string/substitution_description"
+            android:selectable="false" />
 
         <EditTextPreference
             android:defaultValue=""
@@ -86,6 +87,23 @@
             app:useSimpleSummaryProvider="false"
             android:singleLine="true"
             android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/import_export_settings">
+
+        <Preference
+            android:key="import_export_description"
+            android:persistent="false"
+            android:title="@string/import_export_description"
+            android:selectable="false" />
+
+        <Preference
+            android:key="import_export"
+            android:persistent="false"
+            android:title="Import/Export"
+            android:layout="@layout/import_export"
+            android:selectable="false" />
 
     </PreferenceCategory>
 

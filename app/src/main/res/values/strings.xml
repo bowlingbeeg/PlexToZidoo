@@ -8,6 +8,7 @@
     <string name="plex_settings">Plex</string>
     <string name="substitution_settings">Substitutions</string>
     <string name="smb_settings">Smb</string>
+    <string name="import_export_settings">Import/Export Settings</string>
 
     <!-- General Preferences -->
     <string name="debug_title">Debug data</string>
@@ -24,6 +25,10 @@
     <!-- Smb Preferences -->
     <string name="smbUsername_title">Smb username (if needed)</string>
     <string name="smbPassword_title">Smb password (if needed)</string>
+    <!-- Import/Export -->
+    <string name="import_export_description">Settings are imported/exported using the file PlexToZidooSettings.txt in the Download directory\nNOTE: These will not import/export your password</string>
+    <string name="import_button_title">Import</string>
+    <string name="export_button_title">Export</string>
 
     <!-- Play activity -->
     <string name="play_button_title">Play</string>

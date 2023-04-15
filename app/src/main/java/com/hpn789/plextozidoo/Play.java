@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Xml;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,11 +26,13 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Play extends AppCompatActivity {
 
     static final String tokenParameter = "X-Plex-Token=";
+    static final String clientParameter = "X-Plex-Client-Identifier=";
     private Intent intent;
     private String address = "";
     private PlexLibraryInfo libraryInfo;
@@ -52,7 +55,8 @@ public class Play extends AppCompatActivity {
     private String message = "";
     private boolean foundSubstitution = false;
 
-    private TextView textView;
+    private TextView textView1;
+    private TextView textView2;
     private Button playButton;
 
     @Override
@@ -72,15 +76,18 @@ public class Play extends AppCompatActivity {
         String intentToPrint = intentToString(intent);
         String pathToPrint = directPath;
 
-        // Replace the address and token in the intent
-        intentToPrint = intentToPrint.replaceFirst(Pattern.quote(address), "<address>");
-        intentToPrint = intentToPrint.replaceFirst(Pattern.quote(token), "<token>");
-        intentToPrint = intentToPrint.replaceFirst("(X-Plex-Client-Identifier=).*?(&)", "$1<client>$2");
+        // Replace the address, token, and client identifier in the intent and path strings
+        if(!address.isEmpty())
+        {
+            intentToPrint = intentToPrint.replaceFirst(Pattern.quote(address), "<address>");
+            pathToPrint = pathToPrint.replaceFirst(Pattern.quote(address), "<address>");
+        }
 
-        // Replace the address and token in the path
-        pathToPrint = pathToPrint.replaceFirst(Pattern.quote(address), "<address>");
-        pathToPrint = pathToPrint.replaceFirst(Pattern.quote(token), "<token>");
-        pathToPrint = pathToPrint.replaceFirst("(X-Plex-Client-Identifier=).*?(&)", "$1<client>$2");
+        intentToPrint = intentToPrint.replaceFirst(tokenParameter + "[^&]+", tokenParameter + "<token>");
+        pathToPrint = pathToPrint.replaceFirst(tokenParameter + "[^&]+", tokenParameter + "<token>");
+
+        intentToPrint = intentToPrint.replaceFirst(clientParameter + "[^&]+", clientParameter + "<client>");
+        pathToPrint = pathToPrint.replaceFirst(clientParameter + "[^&]+", clientParameter + "<client>");
 
         // If the path has a password in it then hide it from the debug output
         if(!password.isEmpty())
@@ -95,8 +102,19 @@ public class Play extends AppCompatActivity {
             librarySection = libraryInfo.getKey();
             mediaType = libraryInfo.getType().name;
         }
+        if(!foundSubstitution && message.isEmpty())
+        {
+            message = "No substitution found";
+        }
 
-        textView.setText(String.format(Locale.ENGLISH, "Message: %s\n\nIntent: %s\n\nPath Substitution: %s\n\nView Offset: %d\n\nDuration: %d\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s", message, intentToPrint, pathToPrint, viewOffset, duration, ratingKey, partKey, partId, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey));
+        if(!message.isEmpty())
+        {
+            textView1.setVisibility(View.VISIBLE);
+            textView1.getLayoutParams().height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            textView1.setText(String.format(Locale.ENGLISH, "ERROR: %s\n", message));
+        }
+
+        textView2.setText(String.format(Locale.ENGLISH, "Intent: %s\n\nPath Substitution: %s\n\nView Offset: %d\n\nDuration: %d\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s", intentToPrint, pathToPrint, viewOffset, duration, ratingKey, partKey, partId, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey));
     }
 
     private void showDebugPageOrSendIntent()
@@ -143,13 +161,13 @@ public class Play extends AppCompatActivity {
                     }
                     catch (Exception e)
                     {
-                        message = "10: " + e;
+                        message = "6: " + e;
                         showDebugPageOrSendIntent();
                         return;
                     }
                 },
                 error -> {
-                    message = "11: Couldn't find next file";
+                    message = "Couldn't find next file";
                     showDebugPageOrSendIntent();
                 });
 
@@ -187,13 +205,13 @@ public class Play extends AppCompatActivity {
                     }
                     catch (Exception e)
                     {
-                        message = "8: " + e;
+                        message = "5: " + e;
                     }
 
                     showDebugPageOrSendIntent();
                 },
                 error -> {
-                    message = "9: Couldn't find metadata";
+                    message = "Couldn't find metadata";
                     showDebugPageOrSendIntent();
                 });
 
@@ -204,6 +222,7 @@ public class Play extends AppCompatActivity {
     private void searchPath(List<PlexLibraryInfo> infos, int index)
     {
         PlexLibraryInfo info = infos.get(index);
+        libraryInfo = info;
         RequestQueue queue = Volley.newRequestQueue(this);
         String url = address + "/library/sections/" + info.getKey() + "/search?type=" + info.getType().searchId + "&part=" + partId + "&" + tokenParameter + token;
         // Request a string response from the provided URL.
@@ -217,7 +236,6 @@ public class Play extends AppCompatActivity {
                         String path = parser.parse(targetStream);
                         if(!path.isEmpty())
                         {
-                            libraryInfo = info;
                             ratingKey = parser.getRatingKey();
                             videoTitle = parser.getVideoTitle();
                             duration = parser.getDuration();
@@ -225,31 +243,38 @@ public class Play extends AppCompatActivity {
                             parentRatingKey = parser.getParentRatingKey();
                             password = "";
 
-                            // Check if we can actually do the substitution, if not then pass along the original file and see if it plays
-                            String[] path_to_replace = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace", "").split(",");
-                            String[] replaced_with = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with", "").split(",");
-                            if(path_to_replace.length > 0 && replaced_with.length > 0 && path_to_replace.length == replaced_with.length)
+                            // If this isn't a remote stream then try and do path substitution
+                            if(!intent.getDataString().contains("&location=wan&"))
                             {
-                                for (int i = 0; i < path_to_replace.length; i++)
-                                {
-                                    if (!path_to_replace[i].isEmpty() && path.contains(path_to_replace[i]))
+                                // Check if we can actually do the substitution, if not then pass along the original file and see if it plays
+                                String[] path_to_replace = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace", "").split("\\s*,\\s*");
+                                String[] replaced_with = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with", "").split("\\s*,\\s*");
+                                if (path_to_replace.length > 0 && replaced_with.length > 0 && path_to_replace.length == replaced_with.length) {
+                                    for (int i = 0; i < path_to_replace.length; i++)
                                     {
-                                        path = path.replaceFirst(Pattern.quote(path_to_replace[i]), replaced_with[i]).replace("\\", "/");
-
-                                        // If this is an SMB request add user name and password to the path
-                                        String username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername", "");
-                                        if(!username.isEmpty())
+                                        if (!path_to_replace[i].isEmpty() && path.contains(path_to_replace[i]))
                                         {
-                                            password = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbPassword", "");
-                                            path = path.replace("smb://", "smb://" + username + ":" + password + "@");
+                                            path = path.replaceFirst(Pattern.quote(path_to_replace[i]), replaced_with[i]).replace("\\", "/");
+
+                                            // If this is an SMB request add user name and password to the path
+                                            String username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername", "");
+                                            if (!username.isEmpty())
+                                            {
+                                                password = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbPassword", "");
+                                                path = path.replace("smb://", "smb://" + username + ":" + password + "@");
+                                            }
+
+                                            foundSubstitution = true;
+                                            directPath = path;
+
+                                            break;
                                         }
-
-                                        foundSubstitution = true;
-                                        directPath = path;
-
-                                        break;
                                     }
                                 }
+                            }
+                            else
+                            {
+                                message = "Remote Stream - May Not Work";
                             }
 
                             // Search the metadata for audio and subtitle indexes
@@ -261,19 +286,19 @@ public class Play extends AppCompatActivity {
                         }
                         else
                         {
-                            directPath = url;
-                            updateDebugPage();
+                            message = "Video not found on Plex";
+                            showDebugPageOrSendIntent();
                         }
                     }
                     catch (Exception e)
                     {
-                        message = "6: " + e;
+                        message = "4: " + e;
                         showDebugPageOrSendIntent();
                         return;
                     }
                 },
                 error -> {
-                    message = "7: Couldn't find path";
+                    message = "Couldn't find path";
                     showDebugPageOrSendIntent();
                 });
 
@@ -289,7 +314,7 @@ public class Play extends AppCompatActivity {
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 response -> {
                     // Display the first 500 characters of the response string.
-                    String[] names = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("libraries", "").split(",");
+                    String[] names = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("libraries", "").split("\\s*,\\s*");
                     if(names.length > 0 && !names[0].isEmpty())
                     {
                         PlexXmlParser parser = new PlexXmlParser(Arrays.asList(names));
@@ -302,16 +327,17 @@ public class Play extends AppCompatActivity {
                         }
                         catch (Exception e)
                         {
-                            message = "4: " + e;
+                            message = "3: " + e;
                             showDebugPageOrSendIntent();
                             return;
                         }
                     }
 
-                    updateDebugPage();
+                    message = "No libraries specified in settings";
+                    showDebugPageOrSendIntent();
                 },
                 error -> {
-                    message = "5: Couldn't find library";
+                    message = "Couldn't find library";
                     showDebugPageOrSendIntent();
                 });
 
@@ -347,7 +373,7 @@ public class Play extends AppCompatActivity {
                     searchLibrary();
                 },
                 error -> {
-                    message = "3: Couldn't find server";
+                    message = "Couldn't find server";
                     showDebugPageOrSendIntent();
                 });
 
@@ -364,7 +390,8 @@ public class Play extends AppCompatActivity {
         String inputString = intent.getDataString();
         viewOffset = intent.getIntExtra("viewOffset", 0);
         directPath = inputString;
-        textView = findViewById(R.id.textView2);
+        textView1 = findViewById(R.id.textView1);
+        textView2 = findViewById(R.id.textView2);
         playButton = findViewById(R.id.play_button);
         playButton.setOnClickListener(v -> {
             if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("useZidooPlayer", true))
@@ -379,23 +406,58 @@ public class Play extends AppCompatActivity {
 
         try
         {
-            if(!inputString.contains("/library/"))
+            Pattern tokenPattern = Pattern.compile(tokenParameter + "([^&]+)");
+            Matcher tokenMatcher = tokenPattern.matcher(inputString);
+            if(tokenMatcher.find() && tokenMatcher.groupCount() >= 1)
             {
-                message = "0: No library string in address";
+                token = tokenMatcher.group(1);
+            }
+
+            Pattern addressPattern = Pattern.compile("^https://[^/]+");
+            Matcher addressMatcher = addressPattern.matcher(inputString);
+            if(addressMatcher.find())
+            {
+                address = addressMatcher.group();
+
+                if(address.contains("provider.plex.tv"))
+                {
+                    message = "Plex Free Stream - May Not Work";
+                    showDebugPageOrSendIntent();
+                    return;
+                }
+            }
+            else
+            {
+                message = "No address found";
                 showDebugPageOrSendIntent();
                 return;
             }
 
-            int indexOfLibrary = inputString.indexOf("/library/");
-            address = inputString.substring(0, indexOfLibrary);
-            partKey = inputString.substring(indexOfLibrary, inputString.indexOf("?"));
-            String[] partDirs = partKey.split("/");
-            if(partDirs.length > 3)
+            Pattern partKeyPattern = Pattern.compile("/(library|services)/[^?]+");
+            Matcher partKeyMatcher = partKeyPattern.matcher(inputString);
+            if(partKeyMatcher.find())
             {
-                partId = partDirs[3];
+                partKey = partKeyMatcher.group();
+
+                // Is this an online trailer?
+                if(partKey.contains("services"))
+                {
+                    showDebugPageOrSendIntent();
+                    return;
+                }
+
+                String[] partDirs = partKey.split("/");
+                if(partDirs.length > 3)
+                {
+                    partId = partDirs[3];
+                }
             }
-            String tmpToken = inputString.substring(inputString.indexOf(tokenParameter) + tokenParameter.length());
-            token = tmpToken.contains("&") ? tmpToken.substring(0, tmpToken.indexOf("&")) : tmpToken;
+            else
+            {
+                message = "No partKey found";
+                showDebugPageOrSendIntent();
+                return;
+            }
         }
         catch (Exception e)
         {

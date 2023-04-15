@@ -8,9 +8,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class PlexLibraryXmlParser {
-
-    // We don't use namespaces
+public class PlexLibraryXmlParser
+{
     private static final String ns = null;
     private String path = "";
     private String ratingKey = "";
@@ -32,15 +31,19 @@ public class PlexLibraryXmlParser {
         libraryKey = aKey;
     }
 
-    public String parse(InputStream in) throws XmlPullParserException, IOException {
-        try {
+    public String parse(InputStream in) throws XmlPullParserException, IOException
+    {
+        try
+        {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
             parser.setInput(in, null);
             parser.nextTag();
             readXML(parser);
             return path;
-        } finally {
+        }
+        finally
+        {
             in.close();
         }
     }
@@ -90,15 +93,18 @@ public class PlexLibraryXmlParser {
         return parentRatingKey;
     }
 
-    private void readXML(XmlPullParser parser) throws XmlPullParserException, IOException {
+    private void readXML(XmlPullParser parser) throws XmlPullParserException, IOException
+    {
         parser.require(XmlPullParser.START_TAG, ns, "MediaContainer");
 
-        while (parser.next() != XmlPullParser.END_TAG && path.isEmpty()) {
-            if (parser.getEventType() != XmlPullParser.START_TAG) {
+        while (parser.next() != XmlPullParser.END_TAG && path.isEmpty())
+        {
+            if (parser.getEventType() != XmlPullParser.START_TAG)
+            {
                 continue;
             }
+
             String name = parser.getName();
-            // Starts by looking for the entry tag
             if(name.equals("Video"))
             {
                 readVideo(parser);
@@ -110,7 +116,8 @@ public class PlexLibraryXmlParser {
         }
     }
 
-    private void readVideo(XmlPullParser parser) throws XmlPullParserException, IOException {
+    private void readVideo(XmlPullParser parser) throws XmlPullParserException, IOException
+    {
         parser.require(XmlPullParser.START_TAG, ns, "Video");
 
         ratingKey = parser.getAttributeValue(null, "ratingKey");
@@ -137,37 +144,51 @@ public class PlexLibraryXmlParser {
             videoIndex = 0;
         }
 
-        while (parser.next() != XmlPullParser.END_TAG && path.isEmpty()) {
-            if (parser.getEventType() != XmlPullParser.START_TAG) {
+        while (parser.next() != XmlPullParser.END_TAG && path.isEmpty())
+        {
+            if (parser.getEventType() != XmlPullParser.START_TAG)
+            {
                 continue;
             }
+
             String name = parser.getName();
-            if (name.equals("Media")) {
+            if (name.equals("Media"))
+            {
                 readMedia(parser);
-            } else {
+            }
+            else
+            {
                 skip(parser);
             }
         }
     }
 
-    private void readMedia(XmlPullParser parser) throws XmlPullParserException, IOException {
+    private void readMedia(XmlPullParser parser) throws XmlPullParserException, IOException
+    {
         parser.require(XmlPullParser.START_TAG, ns, "Media");
 
-        while (parser.next() != XmlPullParser.END_TAG && path.isEmpty()) {
-            if (parser.getEventType() != XmlPullParser.START_TAG) {
+        while (parser.next() != XmlPullParser.END_TAG && path.isEmpty())
+        {
+            if (parser.getEventType() != XmlPullParser.START_TAG)
+            {
                 continue;
             }
+
             String name = parser.getName();
-            if (name.equals("Part")) {
+            if (name.equals("Part"))
+            {
                 readPart(parser);
-            } else {
+            }
+            else
+            {
                 skip(parser);
             }
         }
     }
 
     // Processes link tags in the feed.
-    private void readPart(XmlPullParser parser) throws IOException, XmlPullParserException {
+    private void readPart(XmlPullParser parser) throws IOException, XmlPullParserException
+    {
         parser.require(XmlPullParser.START_TAG, ns, "Part");
 
         String keyAttribute = parser.getAttributeValue(null, "key");
@@ -203,7 +224,8 @@ public class PlexLibraryXmlParser {
         }
     }
 
-    private void readStream(XmlPullParser parser) throws IOException, XmlPullParserException {
+    private void readStream(XmlPullParser parser) throws IOException, XmlPullParserException
+    {
         parser.require(XmlPullParser.START_TAG, ns, "Stream");
 
         String streamType = parser.getAttributeValue(null, "streamType");
@@ -236,13 +258,18 @@ public class PlexLibraryXmlParser {
         skip(parser);
     }
 
-    private void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
-        if (parser.getEventType() != XmlPullParser.START_TAG) {
+    private void skip(XmlPullParser parser) throws XmlPullParserException, IOException
+    {
+        if (parser.getEventType() != XmlPullParser.START_TAG)
+        {
             throw new IllegalStateException();
         }
+
         int depth = 1;
-        while (depth != 0) {
-            switch (parser.next()) {
+        while (depth != 0)
+        {
+            switch (parser.next())
+            {
                 case XmlPullParser.END_TAG:
                     depth--;
                     break;
@@ -252,6 +279,4 @@ public class PlexLibraryXmlParser {
             }
         }
     }
-
-
 }

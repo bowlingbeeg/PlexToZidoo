@@ -1,6 +1,7 @@
 package com.hpn789.plextozidoo;
 
-public class PlexLibraryInfo {
+public class PlexLibraryInfo
+{
     private final String key;
     private final PlexMediaType type;
 
@@ -10,11 +11,13 @@ public class PlexLibraryInfo {
         type = aType;
     }
 
-    public PlexMediaType getType() {
+    public PlexMediaType getType()
+    {
         return type;
     }
 
-    public String getKey() {
+    public String getKey()
+    {
         return key;
     }
 

@@ -10,23 +10,22 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlexXmlParser {
-
-    // We don't use namespaces
-    private static final String ns = null;
+public class PlexXmlParser
+{
+   private static final String ns = null;
     private final List<PlexLibraryInfo> infos = new ArrayList<>();
 
     private final List<String> titles;
-
-    //public List<String> entries = new ArrayList<String>();
 
     public PlexXmlParser(List<String> aTitles)
     {
         titles = aTitles;
     }
 
-    public List<PlexLibraryInfo> parse(InputStream in) throws XmlPullParserException, IOException {
-        try {
+    public List<PlexLibraryInfo> parse(InputStream in) throws XmlPullParserException, IOException
+    {
+        try
+        {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
             parser.setInput(in, null);
@@ -34,30 +33,38 @@ public class PlexXmlParser {
             infos.clear();
             readXML(parser);
             return infos;
-        } finally {
+        }
+        finally
+        {
             in.close();
         }
     }
 
-    private void readXML(XmlPullParser parser) throws XmlPullParserException, IOException {
+    private void readXML(XmlPullParser parser) throws XmlPullParserException, IOException
+    {
 
         parser.require(XmlPullParser.START_TAG, ns, "MediaContainer");
-        while (parser.next() != XmlPullParser.END_DOCUMENT && infos.size()<titles.size()) {
-            if (parser.getEventType() != XmlPullParser.START_TAG) {
+        while (parser.next() != XmlPullParser.END_DOCUMENT && infos.size()<titles.size())
+        {
+            if (parser.getEventType() != XmlPullParser.START_TAG)
+            {
                 continue;
             }
+
             String name = parser.getName();
-            // Starts by looking for the entry tag
-            if (name.equals("Directory")) {
+            if (name.equals("Directory"))
+            {
                 readDirectory(parser);
-            } else {
+            }
+            else
+            {
                 skip(parser);
             }
         }
     }
 
-    private void readDirectory(XmlPullParser parser) {
-
+    private void readDirectory(XmlPullParser parser)
+    {
         String titleValue = parser.getAttributeValue(null, "title");
         if(titles.contains(titleValue))
         {
@@ -72,16 +79,20 @@ public class PlexXmlParser {
                 }
             }
         }
-        //parser.nextTag();
     }
 
-    private void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
-        if (parser.getEventType() != XmlPullParser.START_TAG) {
+    private void skip(XmlPullParser parser) throws XmlPullParserException, IOException
+    {
+        if (parser.getEventType() != XmlPullParser.START_TAG)
+        {
             throw new IllegalStateException();
         }
+
         int depth = 1;
-        while (depth != 0) {
-            switch (parser.next()) {
+        while (depth != 0)
+        {
+            switch (parser.next())
+            {
                 case XmlPullParser.END_TAG:
                     depth--;
                     break;
@@ -91,6 +102,4 @@ public class PlexXmlParser {
             }
         }
     }
-
-
 }

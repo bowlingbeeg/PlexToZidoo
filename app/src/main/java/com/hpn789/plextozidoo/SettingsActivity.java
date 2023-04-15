@@ -30,8 +30,8 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-public class SettingsActivity extends AppCompatActivity {
-
+public class SettingsActivity extends AppCompatActivity
+{
     private final String backupFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/PlexToZidooSettings.txt";
     private static SettingsFragment settingsFragment;
     private static final int PERMISSION_REQUEST_IMPORT = 1;
@@ -39,10 +39,12 @@ public class SettingsActivity extends AppCompatActivity {
     private final String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settings_activity);
-        if (savedInstanceState == null) {
+        if (savedInstanceState == null)
+        {
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.settings, new SettingsFragment())
@@ -50,9 +52,11 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    public static class SettingsFragment extends PreferenceFragmentCompat {
+    public static class SettingsFragment extends PreferenceFragmentCompat
+    {
         @Override
-        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+        public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
+        {
             settingsFragment = this;
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
 
@@ -65,12 +69,13 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
+    protected void onStart()
+    {
         super.onStart();
     }
 
-    public void onImportClickMethod(View view) {
-
+    public void onImportClickMethod(View view)
+    {
         // If we had to request permissions, if we did then we'll do the import when we get notified that the access was granted
         if (checkAndRequestPermissions(PERMISSION_REQUEST_IMPORT))
         {
@@ -80,8 +85,8 @@ public class SettingsActivity extends AppCompatActivity {
         importSettings();
     }
 
-    public void importSettings() {
-
+    public void importSettings()
+    {
         FileInputStream input = null;
         BufferedReader reader = null;
         try
@@ -157,8 +162,8 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    public void onExportClickMethod(View view) {
-
+    public void onExportClickMethod(View view)
+    {
         // If we had to request permissions, if we did then we'll do the export when we get notified that the access was granted
         if (checkAndRequestPermissions(PERMISSION_REQUEST_EXPORT))
         {
@@ -168,8 +173,8 @@ public class SettingsActivity extends AppCompatActivity {
         exportSettings();
     }
 
-    public void exportSettings() {
-
+    public void exportSettings()
+    {
         FileOutputStream output = null;
         try
         {
@@ -209,8 +214,8 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     // Return true if we have to request the permissions, that way the caller can wait until we were granted the permissions before continuing
-    public Boolean checkAndRequestPermissions(int requestCode) {
-
+    public Boolean checkAndRequestPermissions(int requestCode)
+    {
         if(checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
         {
             requestPermissions(permissions, requestCode);
@@ -221,8 +226,8 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
+    {
         if(requestCode == PERMISSION_REQUEST_IMPORT || requestCode == PERMISSION_REQUEST_EXPORT)
         {
             if(grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED)

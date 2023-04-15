@@ -29,8 +29,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Play extends AppCompatActivity {
-
+public class Play extends AppCompatActivity
+{
     static final String tokenParameter = "X-Plex-Token=";
     static final String clientParameter = "X-Plex-Client-Identifier=";
     private Intent intent;
@@ -60,13 +60,15 @@ public class Play extends AppCompatActivity {
     private Button playButton;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
     }
 
     @Override
-    protected void onRestart() {
+    protected void onRestart()
+    {
         super.onRestart();
         this.finish();
     }
@@ -102,6 +104,7 @@ public class Play extends AppCompatActivity {
             librarySection = libraryInfo.getKey();
             mediaType = libraryInfo.getType().name;
         }
+
         if(!foundSubstitution && message.isEmpty())
         {
             message = "No substitution found";
@@ -142,8 +145,8 @@ public class Play extends AppCompatActivity {
         String url = address + "/library/sections/" + libraryInfo.getKey() + "/search?type=" + libraryInfo.getType().searchId + "&index=" + videoIndex + "&parent=" + parentRatingKey + "&" + tokenParameter + token;
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                response -> {
-                    // Display the first 500 characters of the response string.
+                response ->
+                {
                     PlexLibraryXmlParser parser = new PlexLibraryXmlParser(null);
                     InputStream targetStream = new ByteArrayInputStream(response.getBytes());
                     try
@@ -166,7 +169,8 @@ public class Play extends AppCompatActivity {
                         return;
                     }
                 },
-                error -> {
+                error ->
+                {
                     message = "Couldn't find next file";
                     showDebugPageOrSendIntent();
                 });
@@ -181,8 +185,8 @@ public class Play extends AppCompatActivity {
         String url = address + "/library/metadata/" + ratingKey + "?" + tokenParameter + token;
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                response -> {
-                    // Display the first 500 characters of the response string.
+                response ->
+                {
                     PlexLibraryXmlParser parser = new PlexLibraryXmlParser(partKey);
                     InputStream targetStream = new ByteArrayInputStream(response.getBytes());
                     try
@@ -210,7 +214,8 @@ public class Play extends AppCompatActivity {
 
                     showDebugPageOrSendIntent();
                 },
-                error -> {
+                error ->
+                {
                     message = "Couldn't find metadata";
                     showDebugPageOrSendIntent();
                 });
@@ -227,8 +232,8 @@ public class Play extends AppCompatActivity {
         String url = address + "/library/sections/" + info.getKey() + "/search?type=" + info.getType().searchId + "&part=" + partId + "&" + tokenParameter + token;
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                response -> {
-                    // Display the first 500 characters of the response string.
+                response ->
+                {
                     PlexLibraryXmlParser parser = new PlexLibraryXmlParser(partKey);
                     InputStream targetStream = new ByteArrayInputStream(response.getBytes());
                     try
@@ -249,7 +254,8 @@ public class Play extends AppCompatActivity {
                                 // Check if we can actually do the substitution, if not then pass along the original file and see if it plays
                                 String[] path_to_replace = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace", "").split("\\s*,\\s*");
                                 String[] replaced_with = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with", "").split("\\s*,\\s*");
-                                if (path_to_replace.length > 0 && replaced_with.length > 0 && path_to_replace.length == replaced_with.length) {
+                                if (path_to_replace.length > 0 && replaced_with.length > 0 && path_to_replace.length == replaced_with.length)
+                                {
                                     for (int i = 0; i < path_to_replace.length; i++)
                                     {
                                         if (!path_to_replace[i].isEmpty() && path.contains(path_to_replace[i]))
@@ -297,7 +303,8 @@ public class Play extends AppCompatActivity {
                         return;
                     }
                 },
-                error -> {
+                error ->
+                {
                     message = "Couldn't find path";
                     showDebugPageOrSendIntent();
                 });
@@ -312,8 +319,8 @@ public class Play extends AppCompatActivity {
         String url = address + "/library/sections/?" + tokenParameter + token;
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                response -> {
-                    // Display the first 500 characters of the response string.
+                response ->
+                {
                     String[] names = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("libraries", "").split("\\s*,\\s*");
                     if(names.length > 0 && !names[0].isEmpty())
                     {
@@ -336,7 +343,8 @@ public class Play extends AppCompatActivity {
                     message = "No libraries specified in settings";
                     showDebugPageOrSendIntent();
                 },
-                error -> {
+                error ->
+                {
                     message = "Couldn't find library";
                     showDebugPageOrSendIntent();
                 });
@@ -351,8 +359,8 @@ public class Play extends AppCompatActivity {
         String url = address + "/identity?" + tokenParameter + token;
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                response -> {
-                    // Display the first 500 characters of the response string.
+                response ->
+                {
                     InputStream targetStream = new ByteArrayInputStream(response.getBytes());
                     try
                     {
@@ -372,7 +380,8 @@ public class Play extends AppCompatActivity {
 
                     searchLibrary();
                 },
-                error -> {
+                error ->
+                {
                     message = "Couldn't find server";
                     showDebugPageOrSendIntent();
                 });
@@ -382,7 +391,8 @@ public class Play extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
+    protected void onStart()
+    {
         super.onStart();
 
         intent = getIntent();
@@ -393,7 +403,8 @@ public class Play extends AppCompatActivity {
         textView1 = findViewById(R.id.textView1);
         textView2 = findViewById(R.id.textView2);
         playButton = findViewById(R.id.play_button);
-        playButton.setOnClickListener(v -> {
+        playButton.setOnClickListener(v ->
+        {
             if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("useZidooPlayer", true))
             {
                 startZidooPlayer(directPath, viewOffset);
@@ -524,7 +535,8 @@ public class Play extends AppCompatActivity {
 
 
     @Override
-    protected void onStop() {
+    protected void onStop()
+    {
         super.onStop();
 
     }
@@ -568,7 +580,8 @@ public class Play extends AppCompatActivity {
                 }
 
                 StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                        response -> {
+                        response ->
+                        {
                             Intent plex = new Intent(Intent.ACTION_VIEW);
                             plex.setClassName("com.plexapp.android", "com.plexapp.plex.activities.SplashActivity");
                             if(!server.isEmpty())
@@ -576,6 +589,7 @@ public class Play extends AppCompatActivity {
                                 // This will try and automatically refresh the plex client with the progress/watched status we just updated on the plex server
                                 plex.setData(Uri.parse("plex://server://" + server + "/com.plexapp.plugins.library/library/metadata/" + ratingKey));
                             }
+
                             startActivity(plex);
                         },
                         error -> Toast.makeText(getApplicationContext(), "Couldn't update progress or watched status", Toast.LENGTH_LONG).show()
@@ -599,7 +613,9 @@ public class Play extends AppCompatActivity {
     public static String intentToString(Intent intent)
     {
         if (intent == null)
+        {
             return "";
+        }
 
         StringBuilder stringBuilder = new StringBuilder("action: ")
                 .append(intent.getAction())
@@ -608,9 +624,10 @@ public class Play extends AppCompatActivity {
                 .append(" extras: ")
                 ;
         for (String key : intent.getExtras().keySet())
+        {
             stringBuilder.append(key).append("=").append(intent.getExtras().get(key)).append(" ");
+        }
 
         return stringBuilder.toString();
-
     }
 }

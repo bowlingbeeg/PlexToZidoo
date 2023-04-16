@@ -54,6 +54,7 @@ public class Play extends AppCompatActivity
     private String server = "";
     private String message = "";
     private boolean foundSubstitution = false;
+    private String videoPath = "";
 
     private TextView textView1;
     private TextView textView2;
@@ -79,11 +80,8 @@ public class Play extends AppCompatActivity
         String pathToPrint = directPath;
 
         // Replace the address, token, and client identifier in the intent and path strings
-        if(!address.isEmpty())
-        {
-            intentToPrint = intentToPrint.replaceFirst(Pattern.quote(address), "<address>");
-            pathToPrint = pathToPrint.replaceFirst(Pattern.quote(address), "<address>");
-        }
+        intentToPrint = intentToPrint.replaceFirst("\\d{1,3}-\\d{1,3}-\\d{1,3}-\\d{1,3}[^/]+", "<address>");
+        pathToPrint = pathToPrint.replaceFirst("\\d{1,3}-\\d{1,3}-\\d{1,3}-\\d{1,3}[^/]+", "<address>");
 
         intentToPrint = intentToPrint.replaceFirst(tokenParameter + "[^&]+", tokenParameter + "<token>");
         pathToPrint = pathToPrint.replaceFirst(tokenParameter + "[^&]+", tokenParameter + "<token>");
@@ -117,7 +115,7 @@ public class Play extends AppCompatActivity
             textView1.setText(String.format(Locale.ENGLISH, "ERROR: %s\n", message));
         }
 
-        textView2.setText(String.format(Locale.ENGLISH, "Intent: %s\n\nPath Substitution: %s\n\nView Offset: %d\n\nDuration: %d\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s", intentToPrint, pathToPrint, viewOffset, duration, ratingKey, partKey, partId, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey));
+        textView2.setText(String.format(Locale.ENGLISH, "Intent: %s\n\nPath Substitution: %s\n\nVideo Path: %s\n\nView Offset: %d\n\nDuration: %d\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s", intentToPrint, pathToPrint, videoPath, viewOffset, duration, ratingKey, partKey, partId, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey));
     }
 
     private void showDebugPageOrSendIntent()
@@ -241,6 +239,7 @@ public class Play extends AppCompatActivity
                         String path = parser.parse(targetStream);
                         if(!path.isEmpty())
                         {
+                            videoPath = path;
                             ratingKey = parser.getRatingKey();
                             videoTitle = parser.getVideoTitle();
                             duration = parser.getDuration();

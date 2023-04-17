@@ -320,27 +320,22 @@ public class Play extends AppCompatActivity
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 response ->
                 {
-                    String[] names = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("libraries", "").split("\\s*,\\s*");
-                    if(names.length > 0 && !names[0].isEmpty())
+                    String include_libraries = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("libraries", "").trim();
+                    String exclude_libraries = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("exclude_libraries", "").trim();
+                    PlexXmlParser parser = new PlexXmlParser(include_libraries, exclude_libraries);
+                    InputStream targetStream = new ByteArrayInputStream(response.getBytes());
+                    try
                     {
-                        PlexXmlParser parser = new PlexXmlParser(Arrays.asList(names));
-                        InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-                        try
-                        {
-                            List<PlexLibraryInfo> libraries = parser.parse(targetStream);
-                            searchPath(libraries, 0);
-                            return;
-                        }
-                        catch (Exception e)
-                        {
-                            message = "3: " + e;
-                            showDebugPageOrSendIntent();
-                            return;
-                        }
+                        List<PlexLibraryInfo> libraries = parser.parse(targetStream);
+                        searchPath(libraries, 0);
+                        return;
                     }
-
-                    message = "No libraries specified in settings";
-                    showDebugPageOrSendIntent();
+                    catch (Exception e)
+                    {
+                        message = "3: " + e;
+                        showDebugPageOrSendIntent();
+                        return;
+                    }
                 },
                 error ->
                 {

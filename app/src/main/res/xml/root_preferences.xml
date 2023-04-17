@@ -40,9 +40,15 @@
     <PreferenceCategory app:title="@string/plex_settings">
 
         <EditTextPreference
-            android:defaultValue=""
+            android:defaultValue="*"
             android:key="libraries"
             android:title="@string/libraries_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="exclude_libraries"
+            android:title="@string/exclude_libraries_title"
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>

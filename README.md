@@ -27,8 +27,6 @@ Things this app will do:
 
 # Setup
   - Go into PlexToZidoo settings and fill out the following required settings
-    - Plex libraries to search
-      - ex: Movies,TV Shows
     - Part of the path to replace
       - ex: /media
     - Replace with

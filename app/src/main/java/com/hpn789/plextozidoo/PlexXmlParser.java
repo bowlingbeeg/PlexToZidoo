@@ -8,18 +8,20 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class PlexXmlParser
 {
-   private static final String ns = null;
     private final List<PlexLibraryInfo> infos = new ArrayList<>();
 
-    private final List<String> titles;
+    private final String include_libraries;
+    private final String exclude_libraries;
 
-    public PlexXmlParser(List<String> aTitles)
+    public PlexXmlParser(String include_string, String exclude_string)
     {
-        titles = aTitles;
+        include_libraries = include_string;
+        exclude_libraries = exclude_string;
     }
 
     public List<PlexLibraryInfo> parse(InputStream in) throws XmlPullParserException, IOException
@@ -42,9 +44,8 @@ public class PlexXmlParser
 
     private void readXML(XmlPullParser parser) throws XmlPullParserException, IOException
     {
-
-        parser.require(XmlPullParser.START_TAG, ns, "MediaContainer");
-        while (parser.next() != XmlPullParser.END_DOCUMENT && infos.size()<titles.size())
+        parser.require(XmlPullParser.START_TAG, null, "MediaContainer");
+        while (parser.next() != XmlPullParser.END_DOCUMENT)
         {
             if (parser.getEventType() != XmlPullParser.START_TAG)
             {
@@ -66,16 +67,21 @@ public class PlexXmlParser
     private void readDirectory(XmlPullParser parser)
     {
         String titleValue = parser.getAttributeValue(null, "title");
-        if(titles.contains(titleValue))
+        // Check the include list first
+        if(include_libraries.isEmpty() || include_libraries.equals("*") || Arrays.asList(include_libraries.split("\\s*,\\s*")).contains(titleValue))
         {
-            String key = parser.getAttributeValue(null, "key");
-            String type = parser.getAttributeValue(null, "type");
-
-            for(PlexMediaType mt : PlexMediaType.values())
+            // Now check the exclude list
+            if(exclude_libraries.isEmpty() || !Arrays.asList(exclude_libraries.split("\\s*,\\s*")).contains(titleValue))
             {
-                if(mt.name.equals(type))
+                String key = parser.getAttributeValue(null, "key");
+                String type = parser.getAttributeValue(null, "type");
+
+                for(PlexMediaType mt : PlexMediaType.values())
                 {
-                    infos.add(new PlexLibraryInfo(key, mt));
+                    if(mt.name.equals(type))
+                    {
+                        infos.add(new PlexLibraryInfo(key, mt));
+                    }
                 }
             }
         }

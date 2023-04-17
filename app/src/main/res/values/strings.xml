@@ -17,7 +17,8 @@
     <string name="showTitle_title">Show title when zidoo player starts</string>
     <string name="auto_play_title">Auto play next episode</string>
     <!-- Plex Preferences -->
-    <string name="libraries_title">Plex libraries name to search-in (separated by ",")</string>
+    <string name="libraries_title">Plex library name(s) to include (use "*" or leave blank to include all libraries, multiple libraries need to be separated by ",")</string>
+    <string name="exclude_libraries_title">Plex library name(s) to exclude (multiple libraries need to be separated by ",")</string>
     <!-- Substitution Preferences -->
     <string name="substitution_description">Multiple substitutions are allowed, each separated by a \",\"\nThe same number of values must be given for both entries below</string>
     <string name="path_to_replace">Part of the path to replace</string>

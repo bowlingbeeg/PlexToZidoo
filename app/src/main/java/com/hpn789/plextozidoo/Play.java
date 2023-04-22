@@ -23,7 +23,6 @@ import org.xmlpull.v1.XmlPullParser;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -55,6 +54,7 @@ public class Play extends AppCompatActivity
     private String message = "";
     private boolean foundSubstitution = false;
     private String videoPath = "";
+    private boolean remoteStream = false;
 
     private TextView textView1;
     private TextView textView2;
@@ -80,8 +80,8 @@ public class Play extends AppCompatActivity
         String pathToPrint = directPath;
 
         // Replace the address, token, and client identifier in the intent and path strings
-        intentToPrint = intentToPrint.replaceFirst("\\d{1,3}-\\d{1,3}-\\d{1,3}-\\d{1,3}[^/]+", "<address>");
-        pathToPrint = pathToPrint.replaceFirst("\\d{1,3}-\\d{1,3}-\\d{1,3}-\\d{1,3}[^/]+", "<address>");
+        intentToPrint = intentToPrint.replaceFirst("https://[^/]+", "https://<address>");
+        pathToPrint = pathToPrint.replaceFirst("https://[^/]+", "https://<address>");
 
         intentToPrint = intentToPrint.replaceFirst(tokenParameter + "[^&]+", tokenParameter + "<token>");
         pathToPrint = pathToPrint.replaceFirst(tokenParameter + "[^&]+", tokenParameter + "<token>");
@@ -105,14 +105,18 @@ public class Play extends AppCompatActivity
 
         if(!foundSubstitution && message.isEmpty())
         {
-            message = "No substitution found";
+            message = "ERROR: No substitution found";
         }
 
         if(!message.isEmpty())
         {
             textView1.setVisibility(View.VISIBLE);
             textView1.getLayoutParams().height = ViewGroup.LayoutParams.WRAP_CONTENT;
-            textView1.setText(String.format(Locale.ENGLISH, "ERROR: %s\n", message));
+            if(message.contains("WARNING"))
+            {
+                textView1.setBackgroundColor(0xFFFFDB58);
+            }
+            textView1.setText(String.format(Locale.ENGLISH, message + "\n"));
         }
 
         textView2.setText(String.format(Locale.ENGLISH, "Intent: %s\n\nPath Substitution: %s\n\nVideo Path: %s\n\nView Offset: %d\n\nDuration: %d\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s", intentToPrint, pathToPrint, videoPath, viewOffset, duration, ratingKey, partKey, partId, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey));
@@ -162,14 +166,14 @@ public class Play extends AppCompatActivity
                     }
                     catch (Exception e)
                     {
-                        message = "6: " + e;
+                        message = "ERROR 6: " + e;
                         showDebugPageOrSendIntent();
                         return;
                     }
                 },
                 error ->
                 {
-                    message = "Couldn't find next file";
+                    message = "WARNING: Couldn't find next file";
                     showDebugPageOrSendIntent();
                 });
 
@@ -207,14 +211,14 @@ public class Play extends AppCompatActivity
                     }
                     catch (Exception e)
                     {
-                        message = "5: " + e;
+                        message = "ERROR 5: " + e;
                     }
 
                     showDebugPageOrSendIntent();
                 },
                 error ->
                 {
-                    message = "Couldn't find metadata";
+                    message = "ERROR: Couldn't find metadata";
                     showDebugPageOrSendIntent();
                 });
 
@@ -247,39 +251,38 @@ public class Play extends AppCompatActivity
                             parentRatingKey = parser.getParentRatingKey();
                             password = "";
 
-                            // If this isn't a remote stream then try and do path substitution
-                            if(!intent.getDataString().contains("&location=wan&"))
+
+                            // Check if we can actually do the substitution, if not then pass along the original file and see if it plays
+                            String[] path_to_replace = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace", "").split("\\s*,\\s*");
+                            String[] replaced_with = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with", "").split("\\s*,\\s*");
+                            if (path_to_replace.length > 0 && replaced_with.length > 0 && path_to_replace.length == replaced_with.length)
                             {
-                                // Check if we can actually do the substitution, if not then pass along the original file and see if it plays
-                                String[] path_to_replace = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace", "").split("\\s*,\\s*");
-                                String[] replaced_with = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with", "").split("\\s*,\\s*");
-                                if (path_to_replace.length > 0 && replaced_with.length > 0 && path_to_replace.length == replaced_with.length)
+                                for (int i = 0; i < path_to_replace.length; i++)
                                 {
-                                    for (int i = 0; i < path_to_replace.length; i++)
+                                    if (!path_to_replace[i].isEmpty() && path.contains(path_to_replace[i]))
                                     {
-                                        if (!path_to_replace[i].isEmpty() && path.contains(path_to_replace[i]))
+                                        path = path.replaceFirst(Pattern.quote(path_to_replace[i]), replaced_with[i]).replace("\\", "/");
+
+                                        // If this is an SMB request add user name and password to the path
+                                        String username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername", "");
+                                        if (!username.isEmpty())
                                         {
-                                            path = path.replaceFirst(Pattern.quote(path_to_replace[i]), replaced_with[i]).replace("\\", "/");
-
-                                            // If this is an SMB request add user name and password to the path
-                                            String username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername", "");
-                                            if (!username.isEmpty())
-                                            {
-                                                password = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbPassword", "");
-                                                path = path.replace("smb://", "smb://" + username + ":" + password + "@");
-                                            }
-
-                                            foundSubstitution = true;
-                                            directPath = path;
-
-                                            break;
+                                            password = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbPassword", "");
+                                            path = path.replace("smb://", "smb://" + username + ":" + password + "@");
                                         }
+
+                                        foundSubstitution = true;
+                                        directPath = path;
+
+                                        break;
                                     }
                                 }
                             }
-                            else
+
+                            if(!foundSubstitution && intent.getDataString().contains("&location=wan&"))
                             {
-                                message = "Remote Stream - May Not Work";
+                                remoteStream = true;
+                                message = "WARNING: Remote Stream - May Not Work";
                             }
 
                             // Search the metadata for audio and subtitle indexes
@@ -291,20 +294,20 @@ public class Play extends AppCompatActivity
                         }
                         else
                         {
-                            message = "Video not found on Plex";
+                            message = "ERROR: Video not found on Plex";
                             showDebugPageOrSendIntent();
                         }
                     }
                     catch (Exception e)
                     {
-                        message = "4: " + e;
+                        message = "ERROR 4: " + e;
                         showDebugPageOrSendIntent();
                         return;
                     }
                 },
                 error ->
                 {
-                    message = "Couldn't find path";
+                    message = "ERROR: Couldn't find path";
                     showDebugPageOrSendIntent();
                 });
 
@@ -332,14 +335,14 @@ public class Play extends AppCompatActivity
                     }
                     catch (Exception e)
                     {
-                        message = "3: " + e;
+                        message = "ERROR 3: " + e;
                         showDebugPageOrSendIntent();
                         return;
                     }
                 },
                 error ->
                 {
-                    message = "Couldn't find library";
+                    message = "ERROR: Couldn't find library";
                     showDebugPageOrSendIntent();
                 });
 
@@ -367,7 +370,7 @@ public class Play extends AppCompatActivity
                     }
                     catch (Exception e)
                     {
-                        message = "2: " + e;
+                        message = "ERROR 2: " + e;
                         showDebugPageOrSendIntent();
                         return;
                     }
@@ -376,7 +379,7 @@ public class Play extends AppCompatActivity
                 },
                 error ->
                 {
-                    message = "Couldn't find server";
+                    message = "ERROR: Couldn't find server";
                     showDebugPageOrSendIntent();
                 });
 
@@ -426,14 +429,14 @@ public class Play extends AppCompatActivity
 
                 if(address.contains("provider.plex.tv"))
                 {
-                    message = "Plex Free Stream - May Not Work";
+                    message = "WARNING: Plex Free Stream - May Not Work";
                     showDebugPageOrSendIntent();
                     return;
                 }
             }
             else
             {
-                message = "No address found";
+                message = "ERROR: No address found";
                 showDebugPageOrSendIntent();
                 return;
             }
@@ -459,14 +462,14 @@ public class Play extends AppCompatActivity
             }
             else
             {
-                message = "No partKey found";
+                message = "ERROR: No partKey found";
                 showDebugPageOrSendIntent();
                 return;
             }
         }
         catch (Exception e)
         {
-            message = "1: " + e;
+            message = "ERROR 1: " + e;
             showDebugPageOrSendIntent();
             return;
         }
@@ -567,7 +570,7 @@ public class Play extends AppCompatActivity
                     url = address + "/:/progress?key=" + ratingKey + "&identifier=com.plexapp.plugins.library&time=" + position + "&state=stopped&" + tokenParameter + token;
 
                     // Can't update the progress on remote streams so just return .. get "Unauthorized" for some reason
-                    if(intent.getDataString().contains("&location=wan&"))
+                    if(remoteStream)
                     {
                         return;
                     }

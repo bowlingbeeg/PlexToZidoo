@@ -173,7 +173,7 @@ public class Play extends AppCompatActivity
                 },
                 error ->
                 {
-                    message = "WARNING: Couldn't find next file";
+                    message = "WARNING: Couldn't find next file - " + error.toString();
                     showDebugPageOrSendIntent();
                 });
 
@@ -218,7 +218,7 @@ public class Play extends AppCompatActivity
                 },
                 error ->
                 {
-                    message = "ERROR: Couldn't find metadata";
+                    message = "ERROR: Couldn't find metadata - " + error.toString();
                     showDebugPageOrSendIntent();
                 });
 
@@ -307,7 +307,7 @@ public class Play extends AppCompatActivity
                 },
                 error ->
                 {
-                    message = "ERROR: Couldn't find path";
+                    message = "ERROR: Couldn't find path - " + error.toString();
                     showDebugPageOrSendIntent();
                 });
 
@@ -342,7 +342,7 @@ public class Play extends AppCompatActivity
                 },
                 error ->
                 {
-                    message = "ERROR: Couldn't find library";
+                    message = "ERROR: Couldn't find library - " + error.toString();
                     showDebugPageOrSendIntent();
                 });
 
@@ -370,17 +370,15 @@ public class Play extends AppCompatActivity
                     }
                     catch (Exception e)
                     {
-                        message = "ERROR 2: " + e;
-                        showDebugPageOrSendIntent();
-                        return;
+                        message = "WARNING 2: " + e;
                     }
 
                     searchLibrary();
                 },
                 error ->
                 {
-                    message = "ERROR: Couldn't find server";
-                    showDebugPageOrSendIntent();
+                    message = "WARNING: Couldn't find server - " + error.toString();
+                    searchLibrary();
                 });
 
         // Add the request to the RequestQueue.

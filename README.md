@@ -11,6 +11,7 @@ Things this app will do:
   - Uses subtitle and audio streams selected in the Plex GUI
   - Has the ability to play the next video automatically in a TV series
     - This only supports playing the next video in the current season.
+  - Import/Export of PlexToZidoo settings
 
 # Requirements:
   - Zidoo needs direct access to Plex media through SMB.
@@ -22,8 +23,9 @@ Things this app will do:
 # Installation
   - Install this app from the release page.  
     - Releases can be found here: https://github.com/bowlingbeeg/PlexToZidoo/releases
-  - Install native Plex app from google play store.  Stay in mobile layout if it asks you to switch to TV layout until we get through the setup and then you can switch to TV mode
-    - On some versions of Plex it won't switch to TV mode, but you can download a version from Dec '22(9.13.0.37280) and then later update to the newest version on google play and the setting will stick
+  - Install the Plex app but do NOT install the latest version on Google play.  Please download and install version 9.13.0.37280 or older for the setup.
+    - Stay in mobile layout if it asks you to switch to TV layout until you get through the setup and then you can switch to TV mode 
+    - Newer versions of Plex don't allow you to switch to TV mode because of a Plex bug.  After setup is complete and you've switched to TV mode then you can update to later versions of Plex and the TV mode option will stick.
 
 # Setup
   - Go into PlexToZidoo settings and fill out the following required settings
@@ -40,7 +42,7 @@ Things this app will do:
       - You can ignore the warning about not keeping track of the watched status and resume points.  PlexToZidoo will do that for you.
     - Only once you've selected "Use external player" can you switch to TV layout.
     - Go to settings->Experience->Application layout and select TV and then click on "Yes".
-      - On some versions of Plex it won't switch to TV mode, but you can download a version from Dec '22(9.13.0.37280) and then later update to the newest version on google play and the setting will stick
+      - On newer versions of Plex it won't switch to TV mode.  If this happens please uninstall Plex first and then download and install version 9.13.0.37280 or older and start the setup phase over
     - Select something in Plex to play and it should pop up a window asking what app to use to open the file.  Select "Open with PlexToZidoo" and "Always".
       - If you don't get a window that pops up then you might have already selected a default app to open video files.  You'll need to go into the android settings for that app and clear it's defaults before you can select PlexToZidoo as the default
       - Quick settings->Other->About->Advanced Settings->Apps & Notifications and then click the app that was opened by default.  Once in that menu select Advanced->Open by default->clear defaults.  Now you can go back and select PlexToZidoo as the default

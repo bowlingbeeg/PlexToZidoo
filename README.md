@@ -46,6 +46,8 @@ Things this app will do:
     - Select something in Plex to play and it should pop up a window asking what app to use to open the file.  Select "Open with PlexToZidoo" and "Always".
       - If you don't get a window that pops up then you might have already selected a default app to open video files.  You'll need to go into the android settings for that app and clear it's defaults before you can select PlexToZidoo as the default
       - Quick settings->Other->About->Advanced Settings->Apps & Notifications and then click the app that was opened by default.  Once in that menu select Advanced->Open by default->clear defaults.  Now you can go back and select PlexToZidoo as the default
+  - Try out some movies/shows and make sure that there are no error messages in the PlexToZiddo debug screen(the PlexToZidoo screen with all of the media details on it).  Also make sure the path substitution value looks right and that the movies/shows play.
+  - Once you have everything working you should disable the debug screen in the PlexToZidoo settings. By disabling the debug screen your movie/show will play directly without having to hit the play button on the PlexToZidoo debug screen.
       
 # Misc stuff
   - The Plex app will get killed in backgroud every time you start a movie becuase the Zidoo only allows 2 apps to run in the background at a time. Since PlexToZidoo and the Zidoo player are playing the Plex app will get killed.  This shouldn't normally be an issue because PlexToZidoo will try and open Plex back up to where you were but if that isn't working you can try and change this limit in the developer options

@@ -1,6 +1,7 @@
 package com.hpn789.plextozidoo;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.EditTextPreference;
 import androidx.preference.Preference;
@@ -28,12 +30,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SettingsActivity extends AppCompatActivity
 {
     private final String backupFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/PlexToZidooSettings.txt";
     private static SettingsFragment settingsFragment;
+    private static String settingsRootKey;
+    private static String scrollToPreference;
     private static final int PERMISSION_REQUEST_IMPORT = 1;
     private static final int PERMISSION_REQUEST_EXPORT = 2;
     private final String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -58,12 +64,21 @@ public class SettingsActivity extends AppCompatActivity
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
         {
             settingsFragment = this;
-            setPreferencesFromResource(R.xml.root_preferences, rootKey);
+            settingsRootKey = rootKey;
 
-            EditTextPreference smbPasswordPreference = findPreference("smbPassword");
-            if (smbPasswordPreference != null)
+            showRootSettings(null);
+        }
+
+        @SuppressLint("RestrictedApi")
+        @Override
+        protected void onBindPreferences()
+        {
+            super.onBindPreferences();
+
+            if(scrollToPreference != null)
             {
-                smbPasswordPreference.setOnBindEditTextListener(editText -> editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD));
+                scrollToPreference(scrollToPreference);
+                scrollToPreference = null;
             }
         }
     }
@@ -72,6 +87,56 @@ public class SettingsActivity extends AppCompatActivity
     protected void onStart()
     {
         super.onStart();
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        Preference substitutionLink = settingsFragment.findPreference("substitution_link");
+        if (substitutionLink != null)
+        {
+            super.onBackPressed();
+        }
+        else
+        {
+            showRootSettings("substitution_link");
+        }
+    }
+
+    public static void showRootSettings(@Nullable String scrollToPref)
+    {
+        scrollToPreference = scrollToPref;
+        settingsFragment.setPreferencesFromResource(R.xml.root_preferences, settingsRootKey);
+        setSmbPasswordPreference();
+
+        Preference substitutionLink = settingsFragment.findPreference("substitution_link");
+        if (substitutionLink != null)
+        {
+            substitutionLink.setOnPreferenceClickListener(preference ->
+            {
+                settingsFragment.setPreferencesFromResource(R.xml.substitution_preferences, settingsRootKey);
+                setSmbPasswordPreference();
+                return true;
+            });
+        }
+    }
+
+    public static void setSmbPasswordPreference()
+    {
+        String[] pref_index = {"", "_02", "_03", "_04", "_05", "_06", "_07", "_08", "_09", "_10"};
+        for (String s: pref_index)
+        {
+            EditTextPreference smbPasswordPreference = settingsFragment.findPreference("smbPassword" + s);
+            if (smbPasswordPreference != null)
+            {
+                smbPasswordPreference.setOnBindEditTextListener(editText -> editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD));
+            }
+        }
+    }
+
+    public void onSubstitutionBackClickMethod(View view)
+    {
+        showRootSettings("substitution_link");
     }
 
     public void onImportClickMethod(View view)
@@ -102,39 +167,29 @@ public class SettingsActivity extends AppCompatActivity
             {
                 try
                 {
-                    Preference pref = settingsFragment.findPreference(entry.getKey());
-                    if(pref instanceof EditTextPreference)
-                    {
-                        if(entry.getValue().toString().isEmpty())
-                        {
-                            ((EditTextPreference)pref).setText(null);
-                        }
-                        else
-                        {
-                            ((EditTextPreference)pref).setText(entry.getValue().toString());
-                        }
-                    }
-                    else if(pref instanceof SwitchPreference)
-                    {
-                        // Don't restore a password even if it exists
-                        if(!entry.getKey().equals("smbPassword"))
-                        {
-                            if(entry.getValue().toString().isEmpty())
-                            {
-                                ((SwitchPreference)pref).setChecked(false);
-                            }
-                            else
-                            {
-                                ((SwitchPreference)pref).setChecked(Boolean.parseBoolean(entry.getValue().toString()));
-                            }
-                        }
-                    }
+                    setPreferenceOnImport(entry);
                 }
                 catch (Exception e)
                 {
                     // Ignore bad data
                 }
             }
+
+            // Need to set the preferences on the substitution page
+            settingsFragment.setPreferencesFromResource(R.xml.substitution_preferences, settingsRootKey);
+            for (Map.Entry<String, ?> entry : map.entrySet())
+            {
+                try
+                {
+                    setPreferenceOnImport(entry);
+                }
+                catch (Exception e)
+                {
+                    // Ignore bad data
+                }
+            }
+
+            showRootSettings("import_export");
 
             Toast.makeText(getApplicationContext(), "Settings imported successfully from " + backupFile, Toast.LENGTH_LONG).show();
         }
@@ -162,6 +217,37 @@ public class SettingsActivity extends AppCompatActivity
         }
     }
 
+    public void setPreferenceOnImport(Map.Entry<String, ?> entry)
+    {
+        Preference pref = settingsFragment.findPreference(entry.getKey());
+        if(pref instanceof EditTextPreference)
+        {
+            if(entry.getValue().toString().isEmpty())
+            {
+                ((EditTextPreference)pref).setText(null);
+            }
+            else
+            {
+                ((EditTextPreference)pref).setText(entry.getValue().toString());
+            }
+        }
+        else if(pref instanceof SwitchPreference)
+        {
+            // Don't restore a password even if it exists
+            if(!entry.getKey().startsWith("smbPassword"))
+            {
+                if(entry.getValue().toString().isEmpty())
+                {
+                    ((SwitchPreference)pref).setChecked(false);
+                }
+                else
+                {
+                    ((SwitchPreference)pref).setChecked(Boolean.parseBoolean(entry.getValue().toString()));
+                }
+            }
+        }
+    }
+
     public void onExportClickMethod(View view)
     {
         // If we had to request permissions, if we did then we'll do the export when we get notified that the access was granted
@@ -181,10 +267,13 @@ public class SettingsActivity extends AppCompatActivity
             output = new FileOutputStream(backupFile);
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            Map<String,?> prefsMap = prefs.getAll();
-
-            // Don't save off the password
-            prefsMap.remove("smbPassword");
+            Map<String,?> prefsMap = prefs.getAll().entrySet()
+                                                   .stream()
+                                                   .filter(s -> ! s.getKey().startsWith("smbPassword"))
+                                                   .sorted(Map.Entry.comparingByKey())
+                                                   .collect(Collectors.toMap(Map.Entry::getKey,
+                                                                             Map.Entry::getValue,
+                                                                             (oldValue, newValue) -> oldValue, LinkedHashMap::new));
 
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String json = gson.toJson(prefsMap);

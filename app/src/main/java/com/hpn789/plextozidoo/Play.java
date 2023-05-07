@@ -251,29 +251,39 @@ public class Play extends AppCompatActivity
                             parentRatingKey = parser.getParentRatingKey();
                             password = "";
 
-
                             // Check if we can actually do the substitution, if not then pass along the original file and see if it plays
-                            String[] path_to_replace = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace", "").split("\\s*,\\s*");
-                            String[] replaced_with = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with", "").split("\\s*,\\s*");
-                            if (path_to_replace.length > 0 && replaced_with.length > 0 && path_to_replace.length == replaced_with.length)
+                            String[] pref_index = {"", "_02", "_03", "_04", "_05", "_06", "_07", "_08", "_09", "_10"};
+                            for (String s: pref_index)
                             {
-                                for (int i = 0; i < path_to_replace.length; i++)
+                                String[] path_to_replace_array = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace" + s, "").split("\\s*,\\s*");
+                                String[] replaced_with_array = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with" + s, "").split("\\s*,\\s*");
+                                String smb_username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername" + s, "");
+                                String smb_password = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbPassword" + s, "");
+
+                                if (path_to_replace_array.length > 0 && replaced_with_array.length > 0 && path_to_replace_array.length == replaced_with_array.length)
                                 {
-                                    if (!path_to_replace[i].isEmpty() && path.contains(path_to_replace[i]))
+                                    for (int i = 0; i < path_to_replace_array.length; i++)
                                     {
-                                        path = path.replaceFirst(Pattern.quote(path_to_replace[i]), replaced_with[i]).replace("\\", "/");
-
-                                        // If this is an SMB request add user name and password to the path
-                                        String username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername", "");
-                                        if (!username.isEmpty())
+                                        if (!path_to_replace_array[i].isEmpty() && path.contains(path_to_replace_array[i]))
                                         {
-                                            password = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbPassword", "");
-                                            path = path.replace("smb://", "smb://" + username + ":" + password + "@");
+                                            path = path.replaceFirst(Pattern.quote(path_to_replace_array[i]), replaced_with_array[i]).replace("\\", "/");
+
+                                            // If this is an SMB request add user name and password to the path
+                                            if (!smb_username.isEmpty())
+                                            {
+                                                password = smb_password;
+                                                path = path.replace("smb://", "smb://" + smb_username + ":" + password + "@");
+                                            }
+
+                                            foundSubstitution = true;
+                                            directPath = path;
+
+                                            break;
                                         }
+                                    }
 
-                                        foundSubstitution = true;
-                                        directPath = path;
-
+                                    if(foundSubstitution)
+                                    {
                                         break;
                                     }
                                 }
@@ -488,7 +498,7 @@ public class Play extends AppCompatActivity
         // NOTE: This code requires the new ZIDOO API to work. 6.4.42+
         Intent newIntent = new Intent(Intent.ACTION_VIEW);
 
-        newIntent.setDataAndType(Uri.parse(path), "video/mkv");
+        newIntent.setDataAndType(Uri.parse(path), "video/*");
         newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         newIntent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         newIntent.setPackage("com.android.gallery3d");
@@ -544,7 +554,7 @@ public class Play extends AppCompatActivity
         if(resultCode == Activity.RESULT_OK && requestCode == 98)
         {
             int position = data.getIntExtra("position", 0);
-            if(foundSubstitution && position > 0 && !address.isEmpty() && !ratingKey.isEmpty() && !token.isEmpty())
+            if(position > 0 && !address.isEmpty() && !ratingKey.isEmpty() && !token.isEmpty())
             {
                 RequestQueue queue = Volley.newRequestQueue(this);
                 String url;
@@ -614,6 +624,8 @@ public class Play extends AppCompatActivity
 
         StringBuilder stringBuilder = new StringBuilder("action: ")
                 .append(intent.getAction())
+                .append(" type: ")
+                .append(intent.getType())
                 .append(" data: ")
                 .append(intent.getDataString())
                 .append(" extras: ")

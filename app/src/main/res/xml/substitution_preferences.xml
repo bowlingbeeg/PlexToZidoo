@@ -1,0 +1,319 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/substitution_preferences">
+
+    <Preference
+        android:key="substitution_description"
+        android:persistent="false"
+        android:title="@string/substitution_description"
+        android:selectable="false" />
+
+    <PreferenceCategory app:title="Substitution 2 (if needed)">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_02"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_02"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_02"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_02"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Substitution 3 (if needed)">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_03"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_03"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_03"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_03"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Substitution 4 (if needed)">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_04"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_04"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_04"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_04"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Substitution 5 (if needed)">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_05"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_05"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_05"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_05"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Substitution 6 (if needed)">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_06"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_06"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_06"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_06"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Substitution 7 (if needed)">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_07"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_07"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_07"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_07"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Substitution 8 (if needed)">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_08"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_08"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_08"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_08"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Substitution 9 (if needed)">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_09"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_09"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_09"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_09"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Substitution 10 (if needed)">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_10"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_10"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_10"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_10"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory>
+
+        <Preference
+            android:key="substitution_back"
+            android:persistent="false"
+            android:title="Substitution Back"
+            android:layout="@layout/substitution_back"
+            android:selectable="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

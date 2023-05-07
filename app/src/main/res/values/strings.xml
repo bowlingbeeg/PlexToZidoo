@@ -7,7 +7,6 @@
     <string name="player_settings">Player</string>
     <string name="plex_settings">Plex</string>
     <string name="substitution_settings">Substitutions</string>
-    <string name="smb_settings">Smb</string>
     <string name="import_export_settings">Import/Export Settings</string>
 
     <!-- General Preferences -->
@@ -17,19 +16,22 @@
     <string name="showTitle_title">Show title when zidoo player starts</string>
     <string name="auto_play_title">Auto play next episode</string>
     <!-- Plex Preferences -->
-    <string name="libraries_title">Plex library name(s) to include (use "*" or leave blank to include all libraries, multiple libraries need to be separated by ",")</string>
-    <string name="exclude_libraries_title">Plex library name(s) to exclude (multiple libraries need to be separated by ",")</string>
+    <string name="libraries_title">Plex library name(s) to include (use "*" to include all libraries, multiple libraries must be separated by a \",\")</string>
+    <string name="exclude_libraries_title">Plex library name(s) to exclude (multiple libraries must be separated by a \",\")</string>
     <!-- Substitution Preferences -->
-    <string name="substitution_description">Multiple substitutions are allowed, each separated by a \",\"\nThe same number of values must be given for both entries below</string>
+    <string name="substitution_description">Multiple substitution strings must be separated by a \",\"\nThe username and password fields do not allow multiple entries, use the additional substitutions screen if you need a different username/password per substitution"</string>
     <string name="path_to_replace">Part of the path to replace</string>
     <string name="replaced_with">Replaced with</string>
-    <!-- Smb Preferences -->
     <string name="smbUsername_title">Smb username (if needed)</string>
     <string name="smbPassword_title">Smb password (if needed)</string>
+    <string name="substitution_link">Add additional substitutions</string>
     <!-- Import/Export -->
     <string name="import_export_description">Settings are imported/exported using the file PlexToZidooSettings.txt in the Download directory\nNOTE: These will not import/export your password</string>
     <string name="import_button_title">Import</string>
     <string name="export_button_title">Export</string>
+
+    <!-- Substitution Preferences Screen -->
+    <string name="substitution_back_button_title">Back</string>
 
     <!-- Play activity -->
     <string name="play_button_title">Play</string>

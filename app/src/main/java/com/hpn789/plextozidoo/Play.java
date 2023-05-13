@@ -267,6 +267,7 @@ public class Play extends AppCompatActivity
                                         if (!path_to_replace_array[i].isEmpty() && path.contains(path_to_replace_array[i]))
                                         {
                                             path = path.replaceFirst(Pattern.quote(path_to_replace_array[i]), replaced_with_array[i]).replace("\\", "/");
+                                            path = Uri.encode(path, "/ :");
 
                                             // If this is an SMB request add user name and password to the path
                                             if (!smb_username.isEmpty())
@@ -317,8 +318,15 @@ public class Play extends AppCompatActivity
                 },
                 error ->
                 {
-                    message = "ERROR: Couldn't find path - " + error.toString();
-                    showDebugPageOrSendIntent();
+                    if(index + 1 < infos.size())
+                    {
+                        searchPath(infos, index + 1);
+                    }
+                    else
+                    {
+                        message = "ERROR: Couldn't find path - " + error.toString();
+                        showDebugPageOrSendIntent();
+                    }
                 });
 
         // Add the request to the RequestQueue.
@@ -488,7 +496,7 @@ public class Play extends AppCompatActivity
     protected void startPlayer(String path)
     {
         Intent newIntent = new Intent(Intent.ACTION_VIEW);
-        newIntent.setDataAndType(Uri.parse(path), "video/*" );
+        newIntent.setDataAndTypeAndNormalize(Uri.parse(path), "video/*" );
         startActivity(newIntent);
     }
 
@@ -498,7 +506,7 @@ public class Play extends AppCompatActivity
         // NOTE: This code requires the new ZIDOO API to work. 6.4.42+
         Intent newIntent = new Intent(Intent.ACTION_VIEW);
 
-        newIntent.setDataAndType(Uri.parse(path), "video/*");
+        newIntent.setDataAndTypeAndNormalize(Uri.parse(path), "video/*");
         newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         newIntent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         newIntent.setPackage("com.android.gallery3d");

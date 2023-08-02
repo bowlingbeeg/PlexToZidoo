@@ -55,6 +55,7 @@ public class Play extends AppCompatActivity
     private boolean foundSubstitution = false;
     private String videoPath = "";
     private boolean remoteStream = false;
+    private boolean zdmc = false;
 
     private TextView textView1;
     private TextView textView2;
@@ -196,16 +197,22 @@ public class Play extends AppCompatActivity
                         String path = parser.parse(targetStream);
                         if(!path.isEmpty())
                         {
-                            audioSelected = parser.isAudioSelected();
-                            if(audioSelected)
+                            if(!audioSelected)
                             {
-                                selectedAudioIndex = parser.getSelectedAudioIndex();
+                                audioSelected = parser.isAudioSelected();
+                                if (audioSelected)
+                                {
+                                    selectedAudioIndex = parser.getSelectedAudioIndex();
+                                }
                             }
 
-                            subtitleSelected = parser.isSubtitleSelected();
-                            if(subtitleSelected)
+                            if(!subtitleSelected)
                             {
-                                selectedSubtitleIndex = parser.getSelectedSubtitleIndex();
+                                subtitleSelected = parser.isSubtitleSelected();
+                                if (subtitleSelected)
+                                {
+                                    selectedSubtitleIndex = parser.getSelectedSubtitleIndex();
+                                }
                             }
                         }
                     }
@@ -411,7 +418,6 @@ public class Play extends AppCompatActivity
         intent = getIntent();
 
         String inputString = intent.getDataString();
-        viewOffset = intent.getIntExtra("viewOffset", 0);
         directPath = inputString;
         textView1 = findViewById(R.id.textView1);
         textView2 = findViewById(R.id.textView2);
@@ -430,6 +436,36 @@ public class Play extends AppCompatActivity
 
         try
         {
+            Pattern p = Pattern.compile("&PlexToZidoo-([^=]+)=([^&]+)");
+            Matcher m = p.matcher(inputString);
+            while(m.find())
+            {
+                zdmc = true;
+                if(m.group(1).equals("ViewOffset"))
+                {
+                    viewOffset = Integer.parseInt(m.group(2));
+                }
+                else if(m.group(1).equals("AudioIndex"))
+                {
+                    audioSelected = true;
+                    selectedAudioIndex = Integer.parseInt(m.group(2));
+                }
+                else if(m.group(1).equals("SubtitleIndex"))
+                {
+                    subtitleSelected = true;
+                    selectedSubtitleIndex = Integer.parseInt(m.group(2));
+                }
+            }
+
+            if(zdmc)
+            {
+                directPath = m.replaceAll("");
+            }
+            else
+            {
+                viewOffset = intent.getIntExtra("viewOffset", 0);
+            }
+
             Pattern tokenPattern = Pattern.compile(tokenParameter + "([^&]+)");
             Matcher tokenMatcher = tokenPattern.matcher(inputString);
             if(tokenMatcher.find() && tokenMatcher.groupCount() >= 1)
@@ -562,7 +598,7 @@ public class Play extends AppCompatActivity
         if(resultCode == Activity.RESULT_OK && requestCode == 98)
         {
             int position = data.getIntExtra("position", 0);
-            if(position > 0 && !address.isEmpty() && !ratingKey.isEmpty() && !token.isEmpty())
+            if(position > 0 && !address.isEmpty() && !ratingKey.isEmpty() && !token.isEmpty() && !zdmc)
             {
                 RequestQueue queue = Volley.newRequestQueue(this);
                 String url;
@@ -615,7 +651,7 @@ public class Play extends AppCompatActivity
             }
         }
 
-        if(issuePlexIntent)
+        if(issuePlexIntent && !zdmc)
         {
             Intent plex = new Intent(Intent.ACTION_VIEW);
             plex.setClassName("com.plexapp.android", "com.plexapp.plex.activities.SplashActivity");
@@ -636,11 +672,14 @@ public class Play extends AppCompatActivity
                 .append(intent.getType())
                 .append(" data: ")
                 .append(intent.getDataString())
-                .append(" extras: ")
                 ;
-        for (String key : intent.getExtras().keySet())
+        if(intent.getExtras() != null)
         {
-            stringBuilder.append(key).append("=").append(intent.getExtras().get(key)).append(" ");
+            stringBuilder.append(" extras: ");
+            for (String key : intent.getExtras().keySet())
+            {
+                stringBuilder.append(key).append("=").append(intent.getExtras().get(key)).append(" ");
+            }
         }
 
         return stringBuilder.toString();

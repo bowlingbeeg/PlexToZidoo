@@ -9,9 +9,9 @@ android {
     defaultConfig {
         applicationId "com.hpn789.plextozidoo"
         minSdkVersion 28
-        targetSdkVersion 31
+        targetSdkVersion 28
         versionCode 1
-        versionName "2.0"
+        versionName "2.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

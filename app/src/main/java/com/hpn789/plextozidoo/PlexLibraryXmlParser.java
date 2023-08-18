@@ -25,10 +25,13 @@ public class PlexLibraryXmlParser
     private String parentRatingKey = "";
 
     private final String libraryKey;
+    private int mediaIndex;
+    private boolean mediaFound = false;
 
-    public PlexLibraryXmlParser(String aKey)
+    public PlexLibraryXmlParser(String aKey, int mIndex)
     {
         libraryKey = aKey;
+        mediaIndex = mIndex;
     }
 
     public String parse(InputStream in) throws XmlPullParserException, IOException
@@ -161,6 +164,13 @@ public class PlexLibraryXmlParser
                 skip(parser);
             }
         }
+
+        // If we've made it here and mediaFound is true but there is no path then we weren't able
+        // to find the right version. So we need to clear mediaFound or we'll falsely find something
+        if(mediaFound && path.isEmpty())
+        {
+            mediaFound = false;
+        }
     }
 
     private void readMedia(XmlPullParser parser) throws XmlPullParserException, IOException
@@ -194,9 +204,23 @@ public class PlexLibraryXmlParser
         String keyAttribute = parser.getAttributeValue(null, "key");
         if(libraryKey != null)
         {
-            if(keyAttribute.equals(libraryKey))
+            if(keyAttribute.equals(libraryKey) || mediaFound)
             {
-                path = parser.getAttributeValue(null, "file");
+                if(mediaIndex > 0)
+                {
+                    // The real plex client passes us the first video but if mediaIndex is something other than
+                    // -1 or 0 that means there's another version of the video so we need to go find it.
+                    // To do that we'll just keep subtracting 1 from mediaIndex and returning.  Eventually
+                    // mediaIndex will be 0 and that should be the right video ... hopefully
+                    mediaIndex -= 1;
+                    mediaFound = true;
+                    skip(parser);
+                    return;
+                }
+                else
+                {
+                    path = parser.getAttributeValue(null, "file");
+                }
 
                 while (parser.next() != XmlPullParser.END_TAG && (selectedAudioIndex == 0 || selectedSubtitleIndex == 0))
                 {
@@ -215,6 +239,11 @@ public class PlexLibraryXmlParser
                         skip(parser);
                     }
                 }
+            }
+            else
+            {
+                // move past this tag
+                skip(parser);
             }
         }
         // If they didn't pass a libraryKey then pass that back

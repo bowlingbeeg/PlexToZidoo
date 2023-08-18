@@ -56,6 +56,7 @@ public class Play extends AppCompatActivity
     private String videoPath = "";
     private boolean remoteStream = false;
     private boolean zdmc = false;
+    private int mediaIndex = -1;
 
     private TextView textView1;
     private TextView textView2;
@@ -81,14 +82,14 @@ public class Play extends AppCompatActivity
         String pathToPrint = directPath;
 
         // Replace the address, token, and client identifier in the intent and path strings
-        intentToPrint = intentToPrint.replaceFirst("https://[^/]+", "https://<address>");
-        pathToPrint = pathToPrint.replaceFirst("https://[^/]+", "https://<address>");
+        intentToPrint = intentToPrint.replaceFirst("https://[^/ ]+", "https://<address>");
+        pathToPrint = pathToPrint.replaceFirst("https://[^/ ]+", "https://<address>");
 
-        intentToPrint = intentToPrint.replaceFirst(tokenParameter + "[^&]+", tokenParameter + "<token>");
-        pathToPrint = pathToPrint.replaceFirst(tokenParameter + "[^&]+", tokenParameter + "<token>");
+        intentToPrint = intentToPrint.replaceFirst(tokenParameter + "[^& ]+", tokenParameter + "<token>");
+        pathToPrint = pathToPrint.replaceFirst(tokenParameter + "[^& ]+", tokenParameter + "<token>");
 
-        intentToPrint = intentToPrint.replaceFirst(clientParameter + "[^&]+", clientParameter + "<client>");
-        pathToPrint = pathToPrint.replaceFirst(clientParameter + "[^&]+", clientParameter + "<client>");
+        intentToPrint = intentToPrint.replaceFirst(clientParameter + "[^& ]+", clientParameter + "<client>");
+        pathToPrint = pathToPrint.replaceFirst(clientParameter + "[^& ]+", clientParameter + "<client>");
 
         // If the path has a password in it then hide it from the debug output
         if(!password.isEmpty())
@@ -150,7 +151,7 @@ public class Play extends AppCompatActivity
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 response ->
                 {
-                    PlexLibraryXmlParser parser = new PlexLibraryXmlParser(null);
+                    PlexLibraryXmlParser parser = new PlexLibraryXmlParser(null, -1);
                     InputStream targetStream = new ByteArrayInputStream(response.getBytes());
                     try
                     {
@@ -190,7 +191,7 @@ public class Play extends AppCompatActivity
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 response ->
                 {
-                    PlexLibraryXmlParser parser = new PlexLibraryXmlParser(partKey);
+                    PlexLibraryXmlParser parser = new PlexLibraryXmlParser(partKey, mediaIndex);
                     InputStream targetStream = new ByteArrayInputStream(response.getBytes());
                     try
                     {
@@ -243,7 +244,7 @@ public class Play extends AppCompatActivity
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 response ->
                 {
-                    PlexLibraryXmlParser parser = new PlexLibraryXmlParser(partKey);
+                    PlexLibraryXmlParser parser = new PlexLibraryXmlParser(partKey, mediaIndex);
                     InputStream targetStream = new ByteArrayInputStream(response.getBytes());
                     try
                     {
@@ -464,6 +465,7 @@ public class Play extends AppCompatActivity
             else
             {
                 viewOffset = intent.getIntExtra("viewOffset", 0);
+                mediaIndex = intent.getIntExtra("mediaIndex", -1);
             }
 
             Pattern tokenPattern = Pattern.compile(tokenParameter + "([^&]+)");

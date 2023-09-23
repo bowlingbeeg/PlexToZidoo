@@ -464,10 +464,29 @@ public class Play extends AppCompatActivity
             }
             else
             {
-                viewOffset = intent.getIntExtra("viewOffset", 0);
+                try
+                {
+                    viewOffset = intent.getIntExtra("viewOffset", 0);
+                }
+                catch (Exception e)
+                {
+                    // There is some strange error that is seen on newer levels of Plex such that if
+                    // I just try again it will work.  I've only seen this on the first extra we try
+                    // and read so we'll just ignore the first error and hope the second one succeeds
+                    viewOffset = intent.getIntExtra("viewOffset", 0);
+                }
                 mediaIndex = intent.getIntExtra("mediaIndex", -1);
             }
+        }
+        catch (Exception e)
+        {
+            message = "ERROR 1.0: " + e;
+            showDebugPageOrSendIntent();
+            return;
+        }
 
+        try
+        {
             Pattern tokenPattern = Pattern.compile(tokenParameter + "([^&]+)");
             Matcher tokenMatcher = tokenPattern.matcher(inputString);
             if(tokenMatcher.find() && tokenMatcher.groupCount() >= 1)
@@ -494,7 +513,16 @@ public class Play extends AppCompatActivity
                 showDebugPageOrSendIntent();
                 return;
             }
+        }
+        catch (Exception e)
+        {
+            message = "ERROR 1.1: " + e;
+            showDebugPageOrSendIntent();
+            return;
+        }
 
+        try
+        {
             Pattern partKeyPattern = Pattern.compile("/(library|services)/[^?]+");
             Matcher partKeyMatcher = partKeyPattern.matcher(inputString);
             if(partKeyMatcher.find())
@@ -523,7 +551,7 @@ public class Play extends AppCompatActivity
         }
         catch (Exception e)
         {
-            message = "ERROR 1: " + e;
+            message = "ERROR 1.2: " + e;
             showDebugPageOrSendIntent();
             return;
         }

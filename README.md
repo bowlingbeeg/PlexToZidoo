@@ -39,7 +39,7 @@ Things this app will do:
     - SMB username (could be optional depending on your permissions)
     - SMB password (could be optional depending on your permissions)
   - If you installed the ZidooPlexMod you can skip this step
-    - `Open the native Plex app and make sure it's set to mobile layout under settings->Experience->Application layout
+    - Open the native Plex app and make sure it's set to mobile layout under settings->Experience->Application layout
       - If you don't see that option you may already be in TV layout.  You'll need to reinstall Plex and stay in mobile layout if it asks you to switch
       - You might need to use the mouse mode on the remote to navigate while in mobile layout.
       - Go to settings->Advanced->Player and select "Use external player" and then click on "Yes".

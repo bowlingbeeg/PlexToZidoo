@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 public class Play extends AppCompatActivity
 {
@@ -234,6 +236,43 @@ public class Play extends AppCompatActivity
         queue.add(stringRequest);
     }
 
+    private void doSubstitution(String path)
+    {
+        // Check if we can actually do the substitution, if not then pass along the original file and see if it plays
+        String[] pref_index = {"", "_02", "_03", "_04", "_05", "_06", "_07", "_08", "_09", "_10"};
+        for (String s: pref_index)
+        {
+            String[] path_to_replace_array = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace" + s, "").split("\\s*,\\s*");
+            String[] replaced_with_array = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with" + s, "").split("\\s*,\\s*");
+            String smb_username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername" + s, "");
+            String smb_password = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbPassword" + s, "");
+
+            if (path_to_replace_array.length > 0 && replaced_with_array.length > 0 && path_to_replace_array.length == replaced_with_array.length)
+            {
+                for (int i = 0; i < path_to_replace_array.length; i++)
+                {
+                    if (!path_to_replace_array[i].isEmpty() && path.contains(path_to_replace_array[i]))
+                    {
+                        path = path.replaceFirst(Pattern.quote(path_to_replace_array[i]), replaced_with_array[i]).replace("\\", "/");
+                        path = Uri.encode(path, "/ :");
+
+                        // If this is an SMB request add user name and password to the path
+                        if (!smb_username.isEmpty())
+                        {
+                            password = smb_password;
+                            path = path.replace("smb://", "smb://" + smb_username + ":" + password + "@");
+                        }
+
+                        foundSubstitution = true;
+                        directPath = path;
+
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
     private void searchPath(List<PlexLibraryInfo> infos, int index)
     {
         PlexLibraryInfo info = infos.get(index);
@@ -259,44 +298,7 @@ public class Play extends AppCompatActivity
                             parentRatingKey = parser.getParentRatingKey();
                             password = "";
 
-                            // Check if we can actually do the substitution, if not then pass along the original file and see if it plays
-                            String[] pref_index = {"", "_02", "_03", "_04", "_05", "_06", "_07", "_08", "_09", "_10"};
-                            for (String s: pref_index)
-                            {
-                                String[] path_to_replace_array = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("path_to_replace" + s, "").split("\\s*,\\s*");
-                                String[] replaced_with_array = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("replaced_with" + s, "").split("\\s*,\\s*");
-                                String smb_username = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbUsername" + s, "");
-                                String smb_password = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("smbPassword" + s, "");
-
-                                if (path_to_replace_array.length > 0 && replaced_with_array.length > 0 && path_to_replace_array.length == replaced_with_array.length)
-                                {
-                                    for (int i = 0; i < path_to_replace_array.length; i++)
-                                    {
-                                        if (!path_to_replace_array[i].isEmpty() && path.contains(path_to_replace_array[i]))
-                                        {
-                                            path = path.replaceFirst(Pattern.quote(path_to_replace_array[i]), replaced_with_array[i]).replace("\\", "/");
-                                            path = Uri.encode(path, "/ :");
-
-                                            // If this is an SMB request add user name and password to the path
-                                            if (!smb_username.isEmpty())
-                                            {
-                                                password = smb_password;
-                                                path = path.replace("smb://", "smb://" + smb_username + ":" + password + "@");
-                                            }
-
-                                            foundSubstitution = true;
-                                            directPath = path;
-
-                                            break;
-                                        }
-                                    }
-
-                                    if(foundSubstitution)
-                                    {
-                                        break;
-                                    }
-                                }
-                            }
+                            doSubstitution(path);
 
                             if(!foundSubstitution && intent.getDataString().contains("&location=wan&"))
                             {
@@ -456,11 +458,25 @@ public class Play extends AppCompatActivity
                     subtitleSelected = true;
                     selectedSubtitleIndex = Integer.parseInt(m.group(2));
                 }
+                else if(m.group(1).equals("Title"))
+                {
+                    videoTitle = URLDecoder.decode(m.group(2), StandardCharsets.UTF_8.toString());
+                }
+                else if(m.group(1).equals("Path"))
+                {
+                    videoPath = URLDecoder.decode(m.group(2), StandardCharsets.UTF_8.toString());
+                }
             }
 
             if(zdmc)
             {
                 directPath = m.replaceAll("");
+                if(!videoPath.isEmpty())
+                {
+                    doSubstitution(videoPath);
+                    showDebugPageOrSendIntent();
+                    return;
+                }
             }
             else
             {

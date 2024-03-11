@@ -254,7 +254,10 @@ public class Play extends AppCompatActivity
                     if (!path_to_replace_array[i].isEmpty() && path.contains(path_to_replace_array[i]))
                     {
                         path = path.replaceFirst(Pattern.quote(path_to_replace_array[i]), replaced_with_array[i]).replace("\\", "/");
+
                         path = Uri.encode(path, "/ :");
+
+                        path = path.replaceAll("nfs://(.*?)/", "/mnt/nfs/$1#");
 
                         // If this is an SMB request add user name and password to the path
                         if (!smb_username.isEmpty())

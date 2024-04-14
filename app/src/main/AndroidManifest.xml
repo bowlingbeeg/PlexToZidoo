@@ -47,6 +47,8 @@
                 <data android:scheme="https" />
                 <data android:scheme="content" />
                 <data android:scheme="file" />
+                <data android:scheme="smb" />
+                <data android:scheme="nfs" />
                 <data android:mimeType="video/*" />
                 <data android:mimeType="application/sdp" />
             </intent-filter>

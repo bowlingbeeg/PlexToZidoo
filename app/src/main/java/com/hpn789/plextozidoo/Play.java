@@ -442,8 +442,9 @@ public class Play extends AppCompatActivity
 
         try
         {
-            Pattern p = Pattern.compile("&PlexToZidoo-([^=]+)=([^&]+)");
+            Pattern p = Pattern.compile("[?&]PlexToZidoo-([^=]+)=([^&]+)");
             Matcher m = p.matcher(inputString);
+            boolean pathMapped = false;
             while(m.find())
             {
                 zdmc = true;
@@ -469,12 +470,25 @@ public class Play extends AppCompatActivity
                 {
                     videoPath = URLDecoder.decode(m.group(2), StandardCharsets.UTF_8.toString());
                 }
+                else if(m.group(1).equals("PathMapped"))
+                {
+                    pathMapped = true;
+                }
             }
 
             if(zdmc)
             {
                 directPath = m.replaceAll("");
-                if(!videoPath.isEmpty())
+                if(pathMapped)
+                {
+                    // Already did the substitution in kodi
+                    directPath = Uri.encode(directPath, "/ :");
+                    directPath = directPath.replaceAll("nfs://(.*?)/", "/mnt/nfs/$1#");
+                    foundSubstitution = true;
+                    showDebugPageOrSendIntent();
+                    return;
+                }
+                else if(!videoPath.isEmpty())
                 {
                     doSubstitution(videoPath);
                     showDebugPageOrSendIntent();

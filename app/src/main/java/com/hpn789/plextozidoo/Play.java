@@ -255,9 +255,14 @@ public class Play extends AppCompatActivity
                     {
                         path = path.replaceFirst(Pattern.quote(path_to_replace_array[i]), replaced_with_array[i]).replace("\\", "/");
 
-                        path = Uri.encode(path, "/ :");
-
-                        path = path.replaceAll("nfs://(.*?)/", "/mnt/nfs/$1#");
+                        if (path.contains("nfs://") || directPath.contains("/mnt/nfs/"))
+                        {
+                            path = path.replaceAll("nfs://(.*?)/", "/mnt/nfs/$1#");
+                        }
+                        else
+                        {
+                            path = Uri.encode(path, "/ :");
+                        }
 
                         // If this is an SMB request add user name and password to the path
                         if (!smb_username.isEmpty())
@@ -482,8 +487,12 @@ public class Play extends AppCompatActivity
                 if(pathMapped)
                 {
                     // Already did the substitution in kodi
-                    directPath = Uri.encode(directPath, "/ :");
-                    directPath = directPath.replaceAll("nfs://(.*?)/", "/mnt/nfs/$1#");
+                    if (directPath.contains("nfs://") || directPath.contains("/mnt/nfs/"))
+                    {
+                        directPath = Uri.decode(directPath);
+                        directPath = directPath.replaceAll("nfs://(.*?)/", "/mnt/nfs/$1#");
+                    }
+
                     foundSubstitution = true;
                     showDebugPageOrSendIntent();
                     return;

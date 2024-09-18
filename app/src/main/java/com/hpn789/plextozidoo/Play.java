@@ -5,8 +5,10 @@ import androidx.preference.PreferenceManager;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Xml;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +24,7 @@ import com.android.volley.toolbox.Volley;
 import org.xmlpull.v1.XmlPullParser;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
@@ -34,7 +37,8 @@ public class Play extends AppCompatActivity
 {
     static final String tokenParameter = "X-Plex-Token=";
     static final String clientParameter = "X-Plex-Client-Identifier=";
-    private Intent intent;
+    private Intent originalIntent;
+    private Intent newIntent;
     private String address = "";
     private PlexLibraryInfo libraryInfo;
     private String ratingKey = "";
@@ -64,11 +68,41 @@ public class Play extends AppCompatActivity
     private TextView textView2;
     private Button playButton;
 
+    private boolean useNewZdiooPlayer = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        useNewZdiooPlayer = useNewZdiooPlayer();
         setContentView(R.layout.activity_play);
+    }
+
+    private boolean useNewZdiooPlayer()
+    {
+        try
+        {
+            PackageInfo packageInfo;
+            try
+            {
+                packageInfo = getPackageManager().getPackageInfo("com.zidoo.player", 0);
+            }
+            catch (Exception e)
+            {
+                packageInfo = null;
+            }
+
+            if (packageInfo != null)
+            {
+                return true;
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     @Override
@@ -78,20 +112,23 @@ public class Play extends AppCompatActivity
         this.finish();
     }
 
-    private void updateDebugPage()
+    private String getPrintableString(String inputString)
     {
-        String intentToPrint = intentToString(intent);
-        String pathToPrint = directPath;
+        String outputString = inputString;
 
         // Replace the address, token, and client identifier in the intent and path strings
-        intentToPrint = intentToPrint.replaceFirst("https://[^/ ]+", "https://<address>");
-        pathToPrint = pathToPrint.replaceFirst("https://[^/ ]+", "https://<address>");
+        outputString = outputString.replaceFirst("https://[^/ ]+", "https://<address>");
+        outputString = outputString.replaceFirst(tokenParameter + "[^& ]+", tokenParameter + "<token>");
+        outputString = outputString.replaceFirst(clientParameter + "[^& ]+", clientParameter + "<client>");
 
-        intentToPrint = intentToPrint.replaceFirst(tokenParameter + "[^& ]+", tokenParameter + "<token>");
-        pathToPrint = pathToPrint.replaceFirst(tokenParameter + "[^& ]+", tokenParameter + "<token>");
+        return outputString;
+    }
 
-        intentToPrint = intentToPrint.replaceFirst(clientParameter + "[^& ]+", clientParameter + "<client>");
-        pathToPrint = pathToPrint.replaceFirst(clientParameter + "[^& ]+", clientParameter + "<client>");
+    private void updateDebugPage()
+    {
+        String originalIntentToPrint = getPrintableString(intentToString(originalIntent));
+        String newIntentToPrint = getPrintableString(intentToString(newIntent));
+        String pathToPrint = getPrintableString(directPath);
 
         // If the path has a password in it then hide it from the debug output
         if(!password.isEmpty())
@@ -123,11 +160,20 @@ public class Play extends AppCompatActivity
             textView1.setText(String.format(Locale.ENGLISH, message + "\n"));
         }
 
-        textView2.setText(String.format(Locale.ENGLISH, "Intent: %s\n\nPath Substitution: %s\n\nVideo Path: %s\n\nView Offset: %d\n\nDuration: %d\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s", intentToPrint, pathToPrint, videoPath, viewOffset, duration, ratingKey, partKey, partId, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey));
+        textView2.setText(String.format(Locale.ENGLISH, "Intent: %s\n\nPath Substitution: %s\n\nVideo Path: %s\n\nView Offset: %d\n\nDuration: %d\n\nRating Key: %s\n\nPart Key: %s\n\nPart ID: %s\n\nLibrary Section: %s\n\nMedia Type: %s\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nVideo Index: %d\n\nParent Rating Key: %s\n\nNew Zidoo Player: %b\n\nNew Intent: %s", originalIntentToPrint, pathToPrint, videoPath, viewOffset, duration, ratingKey, partKey, partId, librarySection, mediaType, selectedAudioIndex, selectedSubtitleIndex, videoIndex, parentRatingKey, useNewZdiooPlayer, newIntentToPrint));
     }
 
     private void showDebugPageOrSendIntent()
     {
+        if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("useZidooPlayer", true))
+        {
+            buildZidooIntent(directPath, viewOffset);
+        }
+        else
+        {
+            buildDefaultIntent(directPath);
+        }
+
         // If the debug flag is on then update the text field
         if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("debug", false))
         {
@@ -160,12 +206,12 @@ public class Play extends AppCompatActivity
                         String path = parser.parse(targetStream);
                         if(!path.isEmpty())
                         {
-                            String inputString = intent.getDataString();
+                            String inputString = originalIntent.getDataString();
                             inputString = inputString.replace(partKey, path);
-                            intent.setData(Uri.parse(inputString));
-                            intent.putExtra("viewOffset", 0);
+                            originalIntent.setData(Uri.parse(inputString));
+                            originalIntent.putExtra("viewOffset", 0);
 
-                            startActivity(intent);
+                            startActivity(originalIntent);
                         }
                     }
                     catch (Exception e)
@@ -257,7 +303,11 @@ public class Play extends AppCompatActivity
 
                         if (path.contains("nfs://") || directPath.contains("/mnt/nfs/"))
                         {
-                            path = path.replaceAll("nfs://(.*?)/", "/mnt/nfs/$1#");
+                            // 8k model suppors NFS mounting. For example:  "path_to_replace": "/Volumes/share1" ----  "replaced_with": "nfs://192.168.11.113/share1", The player will automatically mount NFS：/mnt/nfs/192.168.11.113#share1
+                            if (!useNewZdiooPlayer)
+                            {
+                                path = path.replaceAll("nfs://(.*?)/", "/mnt/nfs/$1#");
+                            }
                         }
                         else
                         {
@@ -308,7 +358,7 @@ public class Play extends AppCompatActivity
 
                             doSubstitution(path);
 
-                            if(!foundSubstitution && intent.getDataString().contains("&location=wan&"))
+                            if(!foundSubstitution && originalIntent.getDataString().contains("&location=wan&"))
                             {
                                 remoteStream = true;
                                 message = "WARNING: Remote Stream - May Not Work";
@@ -426,9 +476,9 @@ public class Play extends AppCompatActivity
     {
         super.onStart();
 
-        intent = getIntent();
+        originalIntent = getIntent();
 
-        String inputString = intent.getDataString();
+        String inputString = originalIntent.getDataString();
         directPath = inputString;
         textView1 = findViewById(R.id.textView1);
         textView2 = findViewById(R.id.textView2);
@@ -437,11 +487,11 @@ public class Play extends AppCompatActivity
         {
             if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("useZidooPlayer", true))
             {
-                startZidooPlayer(directPath, viewOffset);
+                startActivityForResult(newIntent, 98);
             }
             else
             {
-                startPlayer(directPath);
+                startActivity(newIntent);
             }
         });
 
@@ -508,16 +558,16 @@ public class Play extends AppCompatActivity
             {
                 try
                 {
-                    viewOffset = intent.getIntExtra("viewOffset", 0);
+                    viewOffset = originalIntent.getIntExtra("viewOffset", 0);
                 }
                 catch (Exception e)
                 {
                     // There is some strange error that is seen on newer levels of Plex such that if
                     // I just try again it will work.  I've only seen this on the first extra we try
                     // and read so we'll just ignore the first error and hope the second one succeeds
-                    viewOffset = intent.getIntExtra("viewOffset", 0);
+                    viewOffset = originalIntent.getIntExtra("viewOffset", 0);
                 }
-                mediaIndex = intent.getIntExtra("mediaIndex", -1);
+                mediaIndex = originalIntent.getIntExtra("mediaIndex", -1);
             }
         }
         catch (Exception e)
@@ -601,24 +651,43 @@ public class Play extends AppCompatActivity
         findServer();
     }
 
-    protected void startPlayer(String path)
+    protected void buildDefaultIntent(String path)
     {
-        Intent newIntent = new Intent(Intent.ACTION_VIEW);
+        newIntent = new Intent(Intent.ACTION_VIEW);
         newIntent.setDataAndTypeAndNormalize(Uri.parse(path), "video/*" );
-        startActivity(newIntent);
     }
 
-    protected void startZidooPlayer(String path, int viewOffset)
+    protected void buildZidooIntent(String path, int viewOffset)
     {
         // see https://github.com/Andy2244/jellyfin-androidtv-zidoo/blob/Zidoo-Edition/app/src/main/java/org/jellyfin/androidtv/ui/playback/ExternalPlayerActivity.java
-        // NOTE: This code requires the new ZIDOO API to work. 6.4.42+
-        Intent newIntent = new Intent(Intent.ACTION_VIEW);
+        // NOTE: This code requires the new ZIDOO API to work.
+        //       For Z9X and Z9X Pro lines that means firmware version 6.4.42+
+        //       For Z9X 8K Line that means firmware version 1.1.42+
+        newIntent = new Intent(Intent.ACTION_VIEW);
 
-        newIntent.setDataAndTypeAndNormalize(Uri.parse(path), "video/*");
+        // If it is a file, it will be played directly
+        if(path.startsWith("/") && new File(path).exists())
+        {
+            newIntent.setDataAndTypeAndNormalize(Uri.fromFile(new File(path)), "video/*");
+        }
+        else
+        {
+            newIntent.setDataAndTypeAndNormalize(Uri.parse(path), "video/*");
+        }
+
         newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         newIntent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-        newIntent.setPackage("com.android.gallery3d");
-        newIntent.setClassName("com.android.gallery3d", "com.android.gallery3d.app.MovieActivity");
+
+        if (useNewZdiooPlayer)
+        {
+            newIntent.setPackage("com.zidoo.player");
+            newIntent.setClassName("com.zidoo.player", "com.zidoo.player.activity.PlayerActivity");
+        }
+        else
+        {
+            newIntent.setPackage("com.android.gallery3d");
+            newIntent.setClassName("com.android.gallery3d", "com.android.gallery3d.app.MovieActivity");
+        }
 
         if (PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("showTitle", true))
         {
@@ -650,8 +719,6 @@ public class Play extends AppCompatActivity
         }
 
         newIntent.putExtra("return_result", true);
-
-        startActivityForResult(newIntent, 98);
     }
 
 
